@@ -23,6 +23,7 @@ const isAuthed = t.middleware((opts) => {
   }
   return opts.next({
     ctx: {
+      ...ctx,
       user: ctx.user,
     },
   });
@@ -38,6 +39,7 @@ const isAdmin = t.middleware((opts) => {
   }
   return opts.next({
     ctx: {
+      ...ctx,
       user: ctx.user,
     },
   });

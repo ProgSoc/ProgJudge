@@ -1,35 +1,57 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { trpc } from "./utils/trpc";
+import { httpBatchLink } from "@trpc/client";
+import type { PistonPackageResult } from "../../backend/src/libs/piston/piston";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [queryClient] = useState(() => new QueryClient());
+  const [trpcClient] = useState(() =>
+    trpc.createClient({
+      links: [
+        httpBatchLink({
+          url: "/api/trpc",
+        }),
+      ],
+    })
+  );
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <PackageList />
+      </QueryClientProvider>
+    </trpc.Provider>
+  );
 }
 
-export default App
+export default App;
+
+export function PackageList () {
+  const { data} = trpc.piston.getPackages.useQuery();
+
+  const languageGroups = data?.reduce((acc, pkg) => {
+    if (!acc[pkg.language]) {
+      acc[pkg.language] = [];
+    }
+    acc[pkg.language].push(pkg);
+    return acc;
+  }, {} as Record<string, PistonPackageResult[]>);
+
+
+  return (<>
+    {Object.entries(languageGroups ?? {}).map(([language, packages]) => (
+      <div key={language}>
+        <h1>{language}</h1>
+        <ul>
+          {packages.map((pkg) => (
+            <li key={pkg.language_version}>
+              <a href={`/package/${pkg.language}`}>{pkg.language_version}</a>
+              <input type={"checkbox"} checked={pkg.installed} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </>)
+}
