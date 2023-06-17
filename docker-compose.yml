@@ -1,0 +1,32 @@
+services:
+  piston:
+    image: ghcr.io/engineer-man/piston
+    container_name: piston
+    restart: unless-stopped
+    ports:
+      - 2000:2000
+    volumes:
+      - ./temp/piston/packages:/piston/packages
+    tmpfs:
+      - /piston/jobs:exec,uid=1000,mode=711
+      - /tmp:exec
+  postgres:
+    image: postgres:14-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - ./temp/postgres:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    volumes:
+      - ./temp/redis:/data

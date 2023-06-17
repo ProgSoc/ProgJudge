@@ -1,0 +1,20 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1686978420416,
+      "tag": "0000_chief_the_renegades",
+      "breakpoints": false
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1686986898032,
+      "tag": "0001_lovely_darkhawk",
+      "breakpoints": false
+    }
+  ]
+}
