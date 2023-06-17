@@ -25,7 +25,7 @@ export const users = pgTable(
   {
     id: serial("id").primaryKey(),
     username: varchar("username").notNull(),
-    role: text("role", { enum: ["Admin", "User"] }),
+    role: text("role", { enum: ["Admin", "User"] }).default("User").notNull(),
   },
   (table) => ({
     usernameIndex: uniqueIndex("usernameIndex").on(table.username),
