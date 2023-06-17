@@ -47,7 +47,7 @@ export function PackageList () {
           {packages.map((pkg) => (
             <li key={pkg.language_version}>
               <a href={`/package/${pkg.language}`}>{pkg.language_version}</a>
-              <input type={"checkbox"} checked={pkg.installed} />
+              <input type={"checkbox"} checked={pkg.installed} readOnly />
             </li>
           ))}
         </ul>
