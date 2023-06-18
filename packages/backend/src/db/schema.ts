@@ -248,6 +248,8 @@ export const submissions = pgTable("submissions", {
   time: timestamp("time").notNull(),
   /** Result of stdout */
   result: text("result"),
+  /** Runtime or compile error */
+  error: text("error"),
   /** Language */
   language: text("language").notNull(),
 });

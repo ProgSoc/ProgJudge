@@ -10,7 +10,8 @@ const envVariables = z.object({
     PORT: z.number().default(3000),
     SECRET_DB_URL: z.string().url("Needs to be a valid url").default('postgres://postgres:postgres@localhost:5432/postgres'),
     COOKIE_SECRET: z.string().default('secret'),
-    REDIS_URL: z.string().url("Needs to be a valid url").default('redis://localhost:6379'),
+    REDIS_SESSION_URL: z.string().url("Needs to be a valid url").default('redis://localhost:6379/0'),
+    REDIS_QUEUE_URL: z.string().url("Needs to be a valid url").default('redis://localhost:6379/1'),
     SESSION_SECRET: z.string().default('secret'),
 
     /**

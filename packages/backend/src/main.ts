@@ -13,6 +13,7 @@ import session from "express-session";
 import passport from "passport";
 import githubStrategy from "./strategies/GithubStrategy";
 import db from "./db/db";
+import pistonClient from "./libs/piston/client";
 
 const bootstrapLogger = logger.scope("Bootstrap");
 
@@ -25,7 +26,7 @@ async function bootstrap() {
   app.use(cookieParser(env.COOKIE_SECRET));
 
   const redisClient = createClient({
-    url: env.REDIS_URL,
+    url: env.REDIS_SESSION_URL,
   });
 
   redisClient.on("error", function (error) {
@@ -79,6 +80,29 @@ async function bootstrap() {
     "/trpc",
     trpcExpress.createExpressMiddleware({ createContext, router })
   );
+
+  try {
+    await pistonClient.installPackage({
+      language: "python",
+      version: "3.10.0",
+    })
+  } catch (error) {
+    console.log(error)
+  }
+ 
+
+  const execRes = await pistonClient.execute({
+    language: "python",
+    version: "3.10.0",
+    files: [
+      {
+        content: "  print('Hello World')",
+        name: "main.py",
+      }
+    ]
+  })
+
+  console.log(execRes)
 
   app.listen(env.PORT, () => {
     bootstrapLogger.success(`Listening on port ${env.PORT}`);

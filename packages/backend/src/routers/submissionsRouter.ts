@@ -10,6 +10,7 @@ import { adminProcedure, authedProcedure, t } from "../trpc";
 import { z } from "zod";
 import { CreateSubmissionSchema } from "../schemas";
 import { TRPCError } from "@trpc/server";
+import queue from "../queue";
 
 const submissionsRouter = t.router({
   getCompetitionSubmissions: adminProcedure
@@ -133,6 +134,7 @@ const submissionsRouter = t.router({
       }
       
       // TODO: Queue submission for grading
+      await queue.add("judging", createdSubmission)
 
       return createdSubmission;
     }),
