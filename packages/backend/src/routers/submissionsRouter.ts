@@ -155,7 +155,7 @@ const submissionsRouter = t.router({
       await queue.add("judging", {
         ...createdSubmission,
         stdin: "",
-        version: pistonPackage?.language_version,
+        version: pistonPackage.language_version,
       });
 
       return createdSubmission;
