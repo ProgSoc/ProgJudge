@@ -32,7 +32,8 @@ const questionsRouter = t.router({
           question: input.question,
           title: input.title,
           points: input.points,
-          answer: input.answer,
+          stdin: input.stdin,
+          stdout: input.stdout,
         })
         .returning();
 
@@ -77,7 +78,8 @@ const questionsRouter = t.router({
           question: input.question,
           title: input.title,
           points: input.points,
-          answer: input.answer,
+          stdout: input.stdout,
+          stdin: input.stdin,
         })
         .where(eq(questions.id, input.id))
         .returning();

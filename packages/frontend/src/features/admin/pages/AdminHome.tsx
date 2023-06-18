@@ -1,7 +1,32 @@
+import { Box, Container, Heading, List, ListItem, Stack, UnorderedList } from "@chakra-ui/react";
+import { Link, useNavigate } from "react-router-dom";
+
 export default function AdminHome() {
+  const navigate = useNavigate();
+  const handleNavigate = (path: string) => () => {
+    navigate(path);
+  }
+
+
   return (
-    <>
-      <h1>Admin Home</h1>
-    </>
+    <Container maxW={"container.md"}>
+    <Stack>
+      <Heading>Admin Home</Heading>
+      <Box>
+      <UnorderedList>
+        <ListItem onClick={handleNavigate('/admin/competitions')}>
+          Competitions
+        </ListItem>
+        <ListItem onClick={handleNavigate('/admin/teams')}>
+          Teams
+        </ListItem>
+        <ListItem onClick={handleNavigate('/admin/questions')}>
+          Questions
+        </ListItem>
+      </UnorderedList>
+      </Box>
+     
+    </Stack>
+    </Container>
   );
 }

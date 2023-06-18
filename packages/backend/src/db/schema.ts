@@ -201,8 +201,10 @@ export const questions = pgTable("questions", {
   title: varchar("title").notNull(),
   /** The markdown description of the question */
   question: text("question").notNull(),
+  /** Stdin */
+  stdin: text("stdin").notNull(),
   /** The expected answer */
-  answer: text("answer").notNull(),
+  stdout: text("answer").notNull(),
   /** The points awarded for the question */
   points: integer("points"),
 });

@@ -98,7 +98,7 @@ worker.on("completed", async (job) => {
     .select({
       questionId: submissions.questionId,
       questionPoints: questions.points,
-      answer: questions.answer,
+      stdout: questions.stdout,
     })
     .from(questions)
     .leftJoin(submissions, eq(submissions.questionId, questions.id))
@@ -107,10 +107,10 @@ worker.on("completed", async (job) => {
   const submissionQuestion = submissionQuestions.at(0);
 
   if (!submissionQuestion) {
-    throw new Error("Failed to find submission question");
+    return;
   }
 
-  if (submissionQuestion.answer !== result.run.output) {
+  if (submissionQuestion.stdout !== result.run.output) {
     await db
       .update(submissions)
       .set({

@@ -104,6 +104,26 @@ const competitionsRouter = t.router({
     return updatedCompetition;
   }),
 
+  getAdminCompetitionDetails: adminProcedure.input(z.number()).query(
+    async ({ ctx, input }) => {
+      const adminComps = await ctx.db
+        .select()
+        .from(competitions)
+        .where(eq(competitions.id, input));
+
+      const competition = adminComps.at(0);
+
+      if (!competition) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Couldn't find competition",
+        });
+      }
+
+      return competition;
+    }
+  ),
+
   getPublicCompetitionDetails: publicProcedure
     .input(z.number())
     .query(async ({ ctx, input }) => {
