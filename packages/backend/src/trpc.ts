@@ -11,6 +11,15 @@ export const createContext = ({
 }: trpcExpress.CreateExpressContextOptions) => ({
     user: req.user,
     db: db,
+    logout: () => new Promise<void>((resolve, reject) => {
+      req.session.destroy((err) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve()
+        }
+      })
+    })
 }); // no context
 
 type Context = inferAsyncReturnType<typeof createContext>;

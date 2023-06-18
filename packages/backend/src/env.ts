@@ -24,6 +24,11 @@ const envVariables = z.object({
      * Piston API
      */
     PISTON_API_URL: z.string().url("Needs to be a valid url").default('https://emkc.org/api/v2/piston'),
+
+    /**
+     * Frontend base url
+     */
+    FRONTEND_URL: z.string().url("Needs to be a valid url").default('http://localhost:5173'),
 })
 
 export type EnvVariables = z.infer<typeof envVariables>

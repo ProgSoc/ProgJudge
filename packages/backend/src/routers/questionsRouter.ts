@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { adminProcedure, publicProcedure, t } from "../trpc";
-import { eq } from "drizzle-orm";
-import { competitions, questions } from "../db/schema";
+import { SQL, and, eq, sql } from "drizzle-orm";
+import { competitions, questions, submissions } from "../db/schema";
 import { AddQuestionSchema, EditQuestionSchema } from "../schemas";
 import { TRPCError } from "@trpc/server";
 
@@ -94,6 +94,38 @@ const questionsRouter = t.router({
       }
 
       return updatedQuestion;
+    }),
+
+  getTeamQuestionScore: publicProcedure
+    .input(
+      z.object({
+        teamId: z.number(),
+        questionId: z.number(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const teamScore = await ctx.db
+        .select({
+          max: sql`MAX(${submissions.points})` as SQL<number>,
+        })
+        .from(submissions)
+        .where(
+          and(
+            eq(submissions.teamId, input.teamId),
+            eq(submissions.questionId, input.questionId)
+          )
+        );
+
+      const maxScore = teamScore.at(0);
+
+      if (!maxScore) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Failed to get team score",
+        });
+      }
+
+      return maxScore.max;
     }),
 });
 

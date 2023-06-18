@@ -72,7 +72,12 @@ async function bootstrap() {
     passport.authenticate("github", { failureRedirect: "/login" }),
     function (req, res) {
       // Successful authentication, redirect home.
-      res.redirect("/");
+      if (req.user) {
+        if (req.user.roles.includes("Admin")) {
+          return res.redirect(env.FRONTEND_URL + "/admin");
+        }
+      }
+      return res.redirect(env.FRONTEND_URL);
     }
   );
 

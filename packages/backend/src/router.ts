@@ -1,3 +1,4 @@
+import authRouter from "./routers/authRouter";
 import competitionsRouter from "./routers/competitionsRouter";
 import pistonRouter from "./routers/pistonRouter";
 import questionsRouter from "./routers/questionsRouter";
@@ -9,6 +10,7 @@ const appRouter = t.router({
     competitions: competitionsRouter,
     teams: teamsRouter,
     questions: questionsRouter,
+    auth: authRouter,
 });
 
 export default appRouter;
