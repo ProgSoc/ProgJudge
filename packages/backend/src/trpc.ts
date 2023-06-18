@@ -34,7 +34,7 @@ const isAdmin = t.middleware((opts) => {
   if (!ctx.user) {
     throw new TRPCError({ code: 'UNAUTHORIZED' });
   }
-  if (ctx.user.role !== "Admin") {
+  if (!ctx.user.roles.includes("Admin")) {
     throw new TRPCError({ code: 'FORBIDDEN' });
   }
   return opts.next({
