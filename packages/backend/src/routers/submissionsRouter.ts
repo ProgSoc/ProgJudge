@@ -11,6 +11,7 @@ import { z } from "zod";
 import { CreateSubmissionSchema } from "../schemas";
 import { TRPCError } from "@trpc/server";
 import queue from "../queue";
+import pistonClient from "../libs/piston/client";
 
 const submissionsRouter = t.router({
   getCompetitionSubmissions: adminProcedure
@@ -115,14 +116,17 @@ const submissionsRouter = t.router({
 
       const sortedFiles = input.files.sort((a, b) => (a.entryPoint ? 1 : -1));
 
-      const createdSubmissions = await ctx.db.insert(submissions).values({
-        teamId: input.teamId,
-        questionId: input.questionId,
-        submission: sortedFiles.map((file) => file.content),
-        time: new Date(),
-        status: "Pending",
-        language: input.language,
-      });
+      const createdSubmissions = await ctx.db
+        .insert(submissions)
+        .values({
+          teamId: input.teamId,
+          questionId: input.questionId,
+          submission: sortedFiles.map((file) => file.content),
+          time: new Date(),
+          status: "Pending",
+          language: input.language,
+        })
+        .returning();
 
       const createdSubmission = createdSubmissions.at(0);
 
@@ -132,9 +136,27 @@ const submissionsRouter = t.router({
           message: "Failed to create submission",
         });
       }
-      
+
+      const pistonPackages = await pistonClient.getPackages();
+
+      const pistonPackage = pistonPackages
+        .filter((pistonPackage) => pistonPackage.language === input.language)
+        .reverse()
+        .at(0);
+
+      if (!pistonPackage) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Failed to find piston package",
+        });
+      }
+
       // TODO: Queue submission for grading
-      await queue.add("judging", createdSubmission)
+      await queue.add("judging", {
+        ...createdSubmission,
+        stdin: "",
+        version: pistonPackage?.language_version,
+      });
 
       return createdSubmission;
     }),
