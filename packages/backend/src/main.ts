@@ -81,28 +81,28 @@ async function bootstrap() {
     trpcExpress.createExpressMiddleware({ createContext, router })
   );
 
-  try {
-    await pistonClient.installPackage({
-      language: "python",
-      version: "3.10.0",
-    })
-  } catch (error) {
-    console.log(error)
-  }
+  // try {
+  //   await pistonClient.installPackage({
+  //     language: "python",
+  //     version: "3.10.0",
+  //   })
+  // } catch (error) {
+  //   console.log(error)
+  // }
  
 
-  const execRes = await pistonClient.execute({
-    language: "python",
-    version: "3.10.0",
-    files: [
-      {
-        content: "  print('Hello World')",
-        name: "main.py",
-      }
-    ]
-  })
+  // const execRes = await pistonClient.execute({
+  //   language: "python",
+  //   version: "3.10.0",
+  //   files: [
+  //     {
+  //       content: "  print('Hello World')",
+  //       name: "main.py",
+  //     }
+  //   ]
+  // })
 
-  console.log(execRes)
+  // console.log(execRes)
 
   app.listen(env.PORT, () => {
     bootstrapLogger.success(`Listening on port ${env.PORT}`);
