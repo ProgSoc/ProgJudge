@@ -1,1 +1,0 @@
-ALTER TABLE "providers" ALTER COLUMN "provider_id" SET NOT NULL;

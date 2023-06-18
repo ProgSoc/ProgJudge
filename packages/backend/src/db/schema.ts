@@ -10,11 +10,14 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 /**
  * Database schema for a programming competition judging system.
  */
+
+
+export const roleEnum = pgEnum("roles", ["Admin", "User"]);
 
 /**
  * The table that stores the user's information.
@@ -25,7 +28,7 @@ export const users = pgTable(
   {
     id: serial("id").primaryKey(),
     username: varchar("username").notNull(),
-    role: text("role", { enum: ["Admin", "User"] }).default("User").notNull(),
+    roles: roleEnum('roles').array().default(sql`'{User}'`).notNull(),
   },
   (table) => ({
     usernameIndex: uniqueIndex("usernameIndex").on(table.username),

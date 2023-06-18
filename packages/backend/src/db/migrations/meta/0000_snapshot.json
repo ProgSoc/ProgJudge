@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "82c7157d-7cfc-4ddb-ad65-fbe571659a0f",
+  "id": "deda7576-3569-47b3-bd1c-edb4e298fb18",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "competitions": {
@@ -75,7 +75,7 @@
           "name": "provider_id",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "user_id": {
           "name": "user_id",
@@ -378,11 +378,12 @@
           "primaryKey": false,
           "notNull": true
         },
-        "role": {
-          "name": "role",
-          "type": "text",
+        "roles": {
+          "name": "roles",
+          "type": "roles[]",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true,
+          "default": "'{User}'"
         }
       },
       "indexes": {
@@ -398,7 +399,15 @@
       "compositePrimaryKeys": {}
     }
   },
-  "enums": {},
+  "enums": {
+    "roles": {
+      "name": "roles",
+      "values": {
+        "Admin": "Admin",
+        "User": "User"
+      }
+    }
+  },
   "schemas": {},
   "_meta": {
     "schemas": {},

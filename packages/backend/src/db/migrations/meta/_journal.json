@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1686978420416,
-      "tag": "0000_chief_the_renegades",
-      "breakpoints": false
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1686986898032,
-      "tag": "0001_lovely_darkhawk",
-      "breakpoints": false
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1687002558230,
-      "tag": "0002_needy_ozymandias",
-      "breakpoints": false
-    },
-    {
-      "idx": 3,
-      "version": "5",
-      "when": 1687002588521,
-      "tag": "0003_orange_black_bolt",
+      "when": 1687060960134,
+      "tag": "0000_tidy_preak",
       "breakpoints": false
     }
   ]

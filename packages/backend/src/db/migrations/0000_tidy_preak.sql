@@ -1,3 +1,9 @@
+DO $$ BEGIN
+ CREATE TYPE "roles" AS ENUM('Admin', 'User');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
 CREATE TABLE IF NOT EXISTS "competitions" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" varchar,
@@ -11,7 +17,7 @@ CREATE TABLE IF NOT EXISTS "competitions" (
 
 CREATE TABLE IF NOT EXISTS "providers" (
 	"provider" text,
-	"provider_id" varchar,
+	"provider_id" varchar NOT NULL,
 	"user_id" serial NOT NULL,
 	"access_token" text,
 	"refresh_token" text,
@@ -55,7 +61,7 @@ CREATE TABLE IF NOT EXISTS "teams" (
 CREATE TABLE IF NOT EXISTS "users" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"username" varchar NOT NULL,
-	"role" text
+	"roles" roles[] DEFAULT '{User}' NOT NULL
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS "usernameIndex" ON "users" ("username");
