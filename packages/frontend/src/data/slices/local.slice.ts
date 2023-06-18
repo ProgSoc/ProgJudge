@@ -1,15 +1,19 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 
 interface LocalState {
-    currentCompetition?: string;
+    currentCompetition: string | null;
 }
 
 const initialState: LocalState = {
-
+    currentCompetition: null
 }
 
 export const localSlice = createSlice({
     name: "local",
     initialState,
-    reducers: {}
+    reducers: {
+        setCurrentCompetition: (state, action: PayloadAction<string | null>) => {
+            state.currentCompetition = action.payload;
+        }
+    }
 })
