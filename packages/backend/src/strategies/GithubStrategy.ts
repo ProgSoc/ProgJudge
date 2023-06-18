@@ -28,7 +28,6 @@ const verify: oauth2.VerifyFunction = async function verify(
     .insert(users)
     .values({
       username: profile.username,
-      role: "User",
     })
     .returning();
 

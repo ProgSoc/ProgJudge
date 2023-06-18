@@ -1,5 +1,23 @@
 DO $$ BEGIN
+ CREATE TYPE "competition_status" AS ENUM('Pending', 'Active', 'Completed');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+ CREATE TYPE "competition_types" AS ENUM('Individual', 'Team');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
  CREATE TYPE "roles" AS ENUM('Admin', 'User');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+ CREATE TYPE "submission_status" AS ENUM('Pending', 'Accepted', 'Rejected');
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -10,8 +28,8 @@ CREATE TABLE IF NOT EXISTS "competitions" (
 	"description" text,
 	"start" timestamp,
 	"end" timestamp,
-	"type" text,
-	"status" text,
+	"type" competition_types DEFAULT 'Team' NOT NULL,
+	"status" competition_status DEFAULT 'Pending' NOT NULL,
 	"languages" text[]
 );
 
@@ -39,7 +57,7 @@ CREATE TABLE IF NOT EXISTS "submissions" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"question_id" integer NOT NULL,
 	"team_id" integer NOT NULL,
-	"status" text,
+	"status" submission_status DEFAULT 'Pending' NOT NULL,
 	"submission" text[],
 	"points" integer,
 	"time" timestamp

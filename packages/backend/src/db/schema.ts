@@ -80,6 +80,17 @@ export const providersRelations = relations(providers, ({ one }) => ({
   }),
 }));
 
+export const competitionsTypeEnum = pgEnum("competition_types", [
+  "Individual",
+  "Team",
+]);
+
+export const competitionsStatusEnum = pgEnum("competition_status", [
+  "Pending",
+  "Active",
+  "Completed",
+]);
+
 /**
  * The table that stores the
  */
@@ -95,9 +106,9 @@ export const competitions = pgTable("competitions", {
   /** The end time for the competition */
   end: timestamp("end"),
   /** The type of competition */
-  type: text("type", { enum: ["Individual", "Team"] }),
+  type: competitionsTypeEnum('type').notNull().default(sql`'Team'`),
   /** The status of the competition */
-  status: text("status", { enum: ["Pending", "Active", "Completed"] }),
+  status: competitionsStatusEnum('status').notNull().default(sql`'Pending'`),
   /** Enabled languages */
   languages: text("languages").array(),
 });
@@ -121,7 +132,7 @@ export const teams = pgTable("teams", {
   /** The unique team Id belonging to the competition */
   id: serial("id").primaryKey(),
   /** The team name */
-  name: varchar("name"),
+  name: varchar("name").notNull(),
   /** The competition that the team belongs to */
   competitionId: integer("competition_id")
     .notNull()
@@ -207,6 +218,12 @@ export const questionsRelations = relations(questions, ({ one, many }) => ({
   }),
 }));
 
+export const submissionsStatusEnum = pgEnum("submission_status", [
+  "Pending",
+  "Accepted",
+  "Rejected",
+]);
+
 /**
  * Submissions table
  */
@@ -222,13 +239,17 @@ export const submissions = pgTable("submissions", {
     .notNull()
     .references(() => teams.id),
   /** The status of judging */
-  status: text("status", { enum: ["Pending", "Accepted", "Rejected"] }),
+  status: submissionsStatusEnum('status').notNull().default(sql`'Pending'`),
   /** The code submitted, first file is the entry */
-  submission: text("submission").array(),
+  submission: text("submission").array().notNull(),
   /** The number of points awarded for the submission */
-  points: integer("points"),
+  points: integer("points").notNull().default(0),
   /** When the answer was submitted */
-  time: timestamp("time"),
+  time: timestamp("time").notNull(),
+  /** Result of stdout */
+  result: text("result"),
+  /** Language */
+  language: text("language").notNull(),
 });
 
 export const submissionsRelations = relations(submissions, ({ one }) => ({

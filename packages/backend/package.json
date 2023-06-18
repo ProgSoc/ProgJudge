@@ -25,6 +25,7 @@
         "piston-client": "^1.0.2",
         "postgres": "^3.3.5",
         "redis": "^4.6.7",
+        "superjson": "^1.12.3",
         "zod": "^3.21.4"
     },
     "devDependencies": {

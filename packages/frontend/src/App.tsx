@@ -4,6 +4,7 @@ import { trpc } from "./utils/trpc";
 import { httpBatchLink } from "@trpc/client";
 import { RouterProvider } from "react-router-dom";
 import router from "./router";
+import SuperJSON from "superjson";
 
 function App() {
   const [queryClient] = useState(() => new QueryClient());
@@ -14,6 +15,7 @@ function App() {
           url: "/api/trpc",
         }),
       ],
+      transformer: SuperJSON
     })
   );
 

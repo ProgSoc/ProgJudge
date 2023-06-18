@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "aa264ca9-9369-4acd-84c9-2d48a5db890e",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "386d8b4e-2fc9-4e8d-bec3-1bb72edee916",
+  "prevId": "aa264ca9-9369-4acd-84c9-2d48a5db890e",
   "tables": {
     "competitions": {
       "name": "competitions",
@@ -222,17 +222,24 @@
           "name": "submission",
           "type": "text[]",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "points": {
           "name": "points",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true,
+          "default": 0
         },
         "time": {
           "name": "time",
           "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "result": {
+          "name": "result",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         }
@@ -338,7 +345,7 @@
           "name": "name",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "competition_id": {
           "name": "competition_id",

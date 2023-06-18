@@ -1,6 +1,7 @@
 import { TRPCError, inferAsyncReturnType, initTRPC } from "@trpc/server";
 import * as trpcExpress from "@trpc/server/adapters/express";
 import db from "./db/db";
+import SuperJSON from "superjson";
 
 
 
@@ -14,7 +15,9 @@ export const createContext = ({
 
 type Context = inferAsyncReturnType<typeof createContext>;
 
-export const t = initTRPC.context<Context>().create();
+export const t = initTRPC.context<Context>().create({
+  transformer: SuperJSON
+});
 
 const isAuthed = t.middleware((opts) => {
   const { ctx } = opts;
@@ -45,6 +48,8 @@ const isAdmin = t.middleware((opts) => {
   });
 });
 
-export const protectedProcedure = t.procedure.use(isAuthed)
+export const publicProcedure = t.procedure
+
+export const authedProcedure = t.procedure.use(isAuthed)
 
 export const adminProcedure = t.procedure.use(isAuthed).use(isAdmin)
