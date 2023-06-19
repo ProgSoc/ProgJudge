@@ -18,7 +18,9 @@ export function Component() {
         <Heading>Home</Heading>
         <p>This is the home page.</p>
         <HStack>
-          {me.data ? null : (
+          {me.data ? <Heading size="md" fontWeight={"semibold"}>
+            Welcome, {me.data.username}!
+          </Heading> : (
             <Button as={Link} to="/login">
               Login
             </Button>
