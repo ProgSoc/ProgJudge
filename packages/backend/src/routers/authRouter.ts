@@ -143,6 +143,18 @@ const authRouter = t.router({
 
       return user;
     }),
+
+    deleteAccount: authedProcedure.mutation(async ({ ctx }) => {
+      const userId = ctx.user.id;
+
+      await ctx.db.delete(users).where(eq(users.id, userId));
+
+      await ctx.db.delete(providers).where(eq(providers.userId, userId));
+
+      await ctx.db.delete(teamMembers).where(eq(teamMembers.userId, userId));
+
+      return ctx.logout()
+    })
 });
 
 export default authRouter;
