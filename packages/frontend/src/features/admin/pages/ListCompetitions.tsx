@@ -1,9 +1,11 @@
 import {
   Box,
   Button,
+  ButtonGroup,
   Container,
   Divider,
   Flex,
+  HStack,
   Heading,
   IconButton,
   SimpleGrid,
@@ -15,6 +17,7 @@ import { trpc } from "../../../utils/trpc";
 import { Link } from "react-router-dom";
 import type { Competition } from "../../../../../backend/src/db/types";
 import { FaPlus } from "react-icons/fa";
+import { MdGroup } from 'react-icons/md'
 export default function ListCompetitions() {
   const competitions = trpc.competitions.getAll.useQuery();
 
@@ -38,7 +41,14 @@ export default function ListCompetitions() {
               <CompetitionCard key={competition.id} {...competition} />
             ))
           ) : (
-            <Heading fontWeight={"semibold"} size="md" textAlign={"center"} m={8}>No Competitions</Heading>
+            <Heading
+              fontWeight={"semibold"}
+              size="md"
+              textAlign={"center"}
+              m={8}
+            >
+              No Competitions
+            </Heading>
           )}
         </SimpleGrid>
       </Stack>
@@ -58,20 +68,24 @@ function CompetitionCard(props: CompetitionCardProps) {
       p={2}
     >
       <Stack spacing={2}>
+        <Tag
+        justifyContent={"center"}
+          colorScheme={
+            props.status === "Pending"
+              ? "yellow"
+              : props.status === "Active"
+              ? "blue"
+              : "green"
+          }
+        >
+          {props.status}
+        </Tag>
         <Heading size={"md"} fontWeight={"semibold"} textAlign={"center"}>
           {props.name}
-          <Tag
-            colorScheme={
-              props.status === "Pending"
-                ? "yellow"
-                : props.status === "Active"
-                ? "blue"
-                : "green"
-            }
-          >
-            {props.status}
-          </Tag>
         </Heading>
+        <ButtonGroup size="md" justifyContent={"center"}>
+          <IconButton icon={<MdGroup />} as={Link} aria-label="Teams" to={`/admin/teams?competitionId=${props.id}`}/>
+        </ButtonGroup>
       </Stack>
     </Box>
   );
