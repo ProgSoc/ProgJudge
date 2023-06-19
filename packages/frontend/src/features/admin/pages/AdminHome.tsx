@@ -1,5 +1,5 @@
-import { Box, Container, Heading, List, ListItem, Stack, UnorderedList } from "@chakra-ui/react";
-import { Link, useNavigate } from "react-router-dom";
+import { Box, Container, Heading, ListItem, Stack, UnorderedList } from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminHome() {
   const navigate = useNavigate();

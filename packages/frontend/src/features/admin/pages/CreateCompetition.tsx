@@ -1,11 +1,6 @@
 import {
   Button,
   Container,
-  FormControl,
-  FormErrorMessage,
-  FormHelperText,
-  FormLabel,
-  Input,
   Stack,
 } from "@chakra-ui/react";
 import { CreateCompetitionSchema } from "../../../../../backend/src/schemas";
@@ -18,9 +13,8 @@ export default function CreateCompetition() {
   const createCompetition = trpc.competitions.create.useMutation();
 
   const {
-    register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = useZodForm({
     schema: CreateCompetitionSchema,
     defaultValues: {

@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 const AddTeamMemberSchema = z.object({
-    teamId: z.number(),
-    userId: z.number(),
+    teamId: z.string(),
+    userId: z.string(),
 });
 
 export default AddTeamMemberSchema;

@@ -1,15 +1,15 @@
-import { Button, Container, Heading, IconButton, Stack } from "@chakra-ui/react"
+import { Button, Container, Heading, Stack } from "@chakra-ui/react"
 import { Link, LoaderFunctionArgs, useLoaderData } from "react-router-dom"
 import { trpc } from "../../../utils/trpc"
 import { z } from "zod"
 
 export async function loader({params}: LoaderFunctionArgs) {
-    const id = await z.string().regex(/^\d+$/).transform(Number).parseAsync(params.competitionId)
+    const id = await z.string().uuid().parseAsync(params.competitionId)
     return id
 }
 
 export function Component () {
-    const competitionId = useLoaderData() as number
+    const competitionId = useLoaderData() as string
     const competition = trpc.competitions.getAdminCompetitionDetails.useQuery(competitionId)
     const questions = trpc.questions.getCompetitionQuestions.useQuery(competitionId)
 

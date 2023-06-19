@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const EditCompetitionSchema = z.object({
-    id: z.number(),
+    id: z.string(),
     name: z.string(),
     description: z.string(),
     start: z.string().datetime(),

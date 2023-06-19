@@ -10,7 +10,7 @@ const teamsRouter = t.router({
    * Get all the teams for a specific competition
    */
   getCompetitionTeams: adminProcedure
-    .input(z.number())
+    .input(z.string())
     .query(({ ctx, input }) => {
       return ctx.db.select().from(teams).where(eq(teams.competitionId, input));
     }),
@@ -95,7 +95,7 @@ const teamsRouter = t.router({
    * Get all the team members for a specific team
    */
   getAdminTeamMembers: authedProcedure
-    .input(z.number())
+    .input(z.string())
     .query(({ ctx, input }) => {
       return ctx.db
         .select({
@@ -107,7 +107,7 @@ const teamsRouter = t.router({
         .leftJoin(users, eq(teamMembers.userId, users.id));
     }),
 
-  getTeamMembers: authedProcedure.input(z.number()).query(async ({ ctx, input }) => {
+  getTeamMembers: authedProcedure.input(z.string()).query(async ({ ctx, input }) => {
     const userId = ctx.user.id;
     const teamId = input;
 
@@ -136,7 +136,7 @@ const teamsRouter = t.router({
   }),
 
   getAdminTeam: adminProcedure
-    .input(z.number().describe("teamId"))
+    .input(z.string().describe("teamId"))
     .query(async ({ ctx, input }) => {
       const selectedTeams = await ctx.db
         .select()
@@ -153,7 +153,7 @@ const teamsRouter = t.router({
     }),
 
   getTeam: authedProcedure
-    .input(z.number().describe("teamId"))
+    .input(z.string().describe("teamId"))
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
       const teamId = input;

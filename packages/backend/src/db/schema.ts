@@ -1,6 +1,5 @@
 import {
   pgTable,
-  serial,
   text,
   varchar,
   pgEnum,
@@ -8,6 +7,7 @@ import {
   uniqueIndex,
   integer,
   timestamp,
+  uuid,
 } from "drizzle-orm/pg-core";
 
 import { relations, sql } from "drizzle-orm";
@@ -26,7 +26,7 @@ export const roleEnum = pgEnum("roles", ["Admin", "User"]);
 export const users = pgTable(
   "users",
   {
-    id: serial("id").primaryKey(),
+    id: uuid('id').primaryKey().defaultRandom(),
     username: varchar("username").notNull(),
     roles: roleEnum('roles').array().default(sql`'{User}'`).notNull(),
   },
@@ -35,7 +35,7 @@ export const users = pgTable(
   })
 );
 
-export const usersRelations = relations(users, ({ one, many }) => ({
+export const usersRelations = relations(users, ({ many }) => ({
   providers: many(providers, {
     relationName: "userOnProvider",
   }),
@@ -44,6 +44,13 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
 }));
 
+export const providerEnum = pgEnum("provider_providers", [
+  "Google",
+  "Github",
+  "Email",
+  "Discord",
+]);
+
 /**
  * The table that stores the user's authentication providers.
  */
@@ -51,15 +58,11 @@ export const providers = pgTable(
   "providers",
   {
     /** The oAuth Provider to sign in with */
-    provider: text("provider", {
-      enum: ["Google", "Github", "Email", "Discord"],
-    }),
+    provider: providerEnum("provider").notNull(),
     /** The remote account id */
     providerId: varchar("provider_id").notNull(),
     /** The Id of the connected user */
-    userId: serial("user_id")
-      .notNull()
-      .references(() => users.id),
+    userId: uuid("user_id").notNull().references(() => users.id),
     /** The access token for the provider */
     accessToken: text("access_token"),
     /** The refresh token for the provider */
@@ -96,7 +99,7 @@ export const competitionsStatusEnum = pgEnum("competition_status", [
  */
 export const competitions = pgTable("competitions", {
   /** The Competition Id */
-  id: serial("id").primaryKey(),
+  id: uuid('id').primaryKey().defaultRandom(),
   /** The name of the competition */
   name: varchar("name"),
   /** The description (MD) of the competition */
@@ -115,7 +118,7 @@ export const competitions = pgTable("competitions", {
 
 export const competitionsRelations = relations(
   competitions,
-  ({ one, many }) => ({
+  ({ many }) => ({
     teams: many(teams, {
       relationName: "competitionOnTeam",
     }),
@@ -130,13 +133,11 @@ export const competitionsRelations = relations(
  */
 export const teams = pgTable("teams", {
   /** The unique team Id belonging to the competition */
-  id: serial("id").primaryKey(),
+  id: uuid('id').primaryKey().defaultRandom(),
   /** The team name */
   name: varchar("name").notNull(),
   /** The competition that the team belongs to */
-  competitionId: integer("competition_id")
-    .notNull()
-    .references(() => competitions.id),
+  competitionId: uuid('competition_id').notNull().references(() => competitions.id),
 });
 
 export const teamsRelations = relations(teams, ({ one, many }) => ({
@@ -160,13 +161,9 @@ export const teamMembers = pgTable(
   "team_members",
   {
     /** The team that the user belongs to */
-    teamId: integer("team_id")
-      .notNull()
-      .references(() => teams.id),
+    teamId: uuid('team_id').notNull().references(() => teams.id),
     /** The user that belongs to the team */
-    userId: integer("user_id")
-      .notNull()
-      .references(() => users.id),
+    userId: uuid('user_id').notNull().references(() => users.id),
   },
   (table) => ({
     /** The primary key is the union of their teamId and userId */
@@ -192,11 +189,9 @@ export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
  */
 export const questions = pgTable("questions", {
   /** The question Id */
-  id: serial("id").primaryKey(),
+  id: uuid('id').primaryKey().defaultRandom(),
   /** The Id of the competition that the question belongs to */
-  competitionId: integer("competition_id")
-    .notNull()
-    .references(() => competitions.id),
+  competitionId: uuid('competition_id').notNull().references(() => competitions.id),
   /** The title of the question */
   title: varchar("title").notNull(),
   /** The markdown description of the question */
@@ -231,15 +226,11 @@ export const submissionsStatusEnum = pgEnum("submission_status", [
  */
 export const submissions = pgTable("submissions", {
   /** The id of the submission */
-  id: serial("id").primaryKey(),
+  id: uuid('id').primaryKey().defaultRandom(),
   /** The Id of the question */
-  questionId: integer("question_id")
-    .notNull()
-    .references(() => questions.id),
+  questionId: uuid('question_id').notNull().references(() => questions.id),
   /** The Id of the team submitting the question */
-  teamId: integer("team_id")
-    .notNull()
-    .references(() => teams.id),
+  teamId: uuid('team_id').notNull().references(() => teams.id),
   /** The status of judging */
   status: submissionsStatusEnum('status').notNull().default(sql`'Pending'`),
   /** The code submitted, first file is the entry */

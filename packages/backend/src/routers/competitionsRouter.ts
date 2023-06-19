@@ -83,7 +83,7 @@ const competitionsRouter = t.router({
     }),
 
   /** End an in-progress competition */
-  end: adminProcedure.input(z.number()).mutation(async ({ ctx, input }) => {
+  end: adminProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
     const updatedCompetitions = await ctx.db
       .update(competitions)
       .set({
@@ -104,7 +104,7 @@ const competitionsRouter = t.router({
     return updatedCompetition;
   }),
 
-  getAdminCompetitionDetails: adminProcedure.input(z.number()).query(
+  getAdminCompetitionDetails: adminProcedure.input(z.string()).query(
     async ({ ctx, input }) => {
       const adminComps = await ctx.db
         .select()
@@ -125,7 +125,7 @@ const competitionsRouter = t.router({
   ),
 
   getPublicCompetitionDetails: publicProcedure
-    .input(z.number())
+    .input(z.string())
     .query(async ({ ctx, input }) => {
       const publicComps = await ctx.db
         .select()

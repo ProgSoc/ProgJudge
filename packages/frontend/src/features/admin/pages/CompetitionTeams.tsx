@@ -4,16 +4,12 @@ import { trpc } from "../../../utils/trpc";
 import { Box, Container, Heading } from "@chakra-ui/react";
 
 export async function loader({ params }: LoaderFunctionArgs) {
-  const id = await z
-    .string()
-    .regex(/^\d+$/)
-    .transform(Number)
-    .parseAsync(params.competitionId);
+  const id = await z.string().uuid().parseAsync(params.competitionId);
   return id;
 }
 
 export function Component() {
-  const competitionId = useLoaderData() as number;
+  const competitionId = useLoaderData() as string;
   const competitionTeams =
     trpc.teams.getCompetitionTeams.useQuery(competitionId);
   const competition =

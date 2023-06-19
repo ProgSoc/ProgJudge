@@ -1,8 +1,8 @@
 import { Box, Container, Heading } from "@chakra-ui/react";
-import { Link, LoaderFunctionArgs } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { trpc } from "../../../utils/trpc";
 
-export async function loader({ params }: LoaderFunctionArgs) {
+export async function loader() {
   return null;
 }
 

@@ -3,7 +3,6 @@ import { z } from "zod";
 import { trpc } from "../../../utils/trpc";
 import useZodForm from "../../../hooks/useZodForm";
 import {
-  AddQuestionSchema,
   CreateTeamSchema,
 } from "../../../../../backend/src/schemas";
 import {
@@ -21,14 +20,13 @@ import { SubmitHandler } from "react-hook-form";
 export async function loader({ params }: LoaderFunctionArgs) {
   const id = await z
     .string()
-    .regex(/^\d+$/)
-    .transform(Number)
+    .uuid()
     .parseAsync(params.competitionId);
   return id;
 }
 
 export function Component() {
-  const competitionId = useLoaderData() as number;
+  const competitionId = useLoaderData() as string;
   const createCompetitionTeam = trpc.teams.createTeam.useMutation();
 
   const {

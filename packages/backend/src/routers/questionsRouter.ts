@@ -7,7 +7,7 @@ import { TRPCError } from "@trpc/server";
 
 const questionsRouter = t.router({
   getCompetitionQuestions: publicProcedure
-    .input(z.number().describe("The competition Id"))
+    .input(z.string().describe("The competition Id"))
     .query(({ ctx, input }) => {
       return ctx.db
         .select({
@@ -50,7 +50,7 @@ const questionsRouter = t.router({
     }),
 
   deleteCompetitionQuestion: adminProcedure
-    .input(z.number().describe("The question Id"))
+    .input(z.string().describe("The question Id"))
     .mutation(async ({ ctx, input }) => {
       const deletedQuestions = await ctx.db
         .delete(questions)
@@ -99,8 +99,8 @@ const questionsRouter = t.router({
   getTeamQuestionScore: publicProcedure
     .input(
       z.object({
-        teamId: z.number(),
-        questionId: z.number(),
+        teamId: z.string(),
+        questionId: z.string(),
       })
     )
     .query(async ({ ctx, input }) => {

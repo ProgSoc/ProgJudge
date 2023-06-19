@@ -17,15 +17,13 @@ import { SubmitHandler } from "react-hook-form";
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const id = await z
-    .string()
-    .regex(/^\d+$/)
-    .transform(Number)
+    .string().uuid()
     .parseAsync(params.competitionId);
   return id;
 }
 
 export function Component() {
-  const competitionId = useLoaderData() as number;
+  const competitionId = useLoaderData() as string;
   const createCompetitionQuestion =
     trpc.questions.addCompetitionQuestion.useMutation();
 

@@ -6,12 +6,12 @@ import { DataTable } from "../../../components/Databtable"
 import { createColumnHelper } from "@tanstack/react-table"
 
 export async function loader ({ params }: LoaderFunctionArgs) {
-  const teamId = await z.string().regex(/^\d+$/).transform(Number).parseAsync(params.teamId)
+  const teamId = await z.string().uuid().parseAsync(params.teamId)
   return teamId
 }
 
 const teamMemberColumnHelper = createColumnHelper<{
-    id: number | null;
+    id: string | null;
     name: string | null;
 }>()
 
@@ -26,7 +26,7 @@ const columns = [
 ]
 
 export function Component () {
-    const teamId = useLoaderData() as number
+    const teamId = useLoaderData() as string
     const team = trpc.teams.getAdminTeam.useQuery(teamId)
     const teamMembers = trpc.teams.getAdminTeamMembers.useQuery(teamId)
 

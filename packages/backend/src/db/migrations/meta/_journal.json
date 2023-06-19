@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1687062487768,
-      "tag": "0000_mushy_cloak",
-      "breakpoints": false
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1687066715804,
-      "tag": "0001_puzzling_kat_farrell",
-      "breakpoints": false
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1687071652068,
-      "tag": "0002_dark_titania",
-      "breakpoints": false
-    },
-    {
-      "idx": 3,
-      "version": "5",
-      "when": 1687084231245,
-      "tag": "0003_outstanding_spyke",
+      "when": 1687132257357,
+      "tag": "0000_cultured_praxagora",
       "breakpoints": false
     }
   ]

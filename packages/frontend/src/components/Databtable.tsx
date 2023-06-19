@@ -13,7 +13,6 @@ import { rankItem, RankingInfo } from "@tanstack/match-sorter-utils";
 import {
   ColumnDef,
   FilterFn,
-  FilterMeta,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,

@@ -2,14 +2,15 @@ import { TRPCError, inferAsyncReturnType, initTRPC } from "@trpc/server";
 import * as trpcExpress from "@trpc/server/adapters/express";
 import db from "./db/db";
 import SuperJSON from "superjson";
+import { InferModel } from "drizzle-orm";
+import { users } from "./db/schema";
 
 
 
 export const createContext = ({
   req,
-  res,
 }: trpcExpress.CreateExpressContextOptions) => ({
-    user: req.user,
+    user: req.user as InferModel<typeof users, "select"> | undefined,
     db: db,
     logout: () => new Promise<void>((resolve, reject) => {
       req.session.destroy((err) => {

@@ -11,6 +11,12 @@ EXCEPTION
 END $$;
 
 DO $$ BEGIN
+ CREATE TYPE "provider_providers" AS ENUM('Google', 'Github', 'Email', 'Discord');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
  CREATE TYPE "roles" AS ENUM('Admin', 'User');
 EXCEPTION
  WHEN duplicate_object THEN null;
@@ -23,7 +29,7 @@ EXCEPTION
 END $$;
 
 CREATE TABLE IF NOT EXISTS "competitions" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar,
 	"description" text,
 	"start" timestamp,
@@ -34,9 +40,9 @@ CREATE TABLE IF NOT EXISTS "competitions" (
 );
 
 CREATE TABLE IF NOT EXISTS "providers" (
-	"provider" text,
+	"provider" provider_providers NOT NULL,
 	"provider_id" varchar NOT NULL,
-	"user_id" serial NOT NULL,
+	"user_id" uuid NOT NULL,
 	"access_token" text,
 	"refresh_token" text,
 	"access_token_expires" text
@@ -45,39 +51,43 @@ CREATE TABLE IF NOT EXISTS "providers" (
 ALTER TABLE "providers" ADD CONSTRAINT "providers_user_id_provider" PRIMARY KEY("user_id","provider");
 
 CREATE TABLE IF NOT EXISTS "questions" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"competition_id" integer NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"competition_id" uuid NOT NULL,
 	"title" varchar NOT NULL,
 	"question" text NOT NULL,
+	"stdin" text NOT NULL,
 	"answer" text NOT NULL,
 	"points" integer
 );
 
 CREATE TABLE IF NOT EXISTS "submissions" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"question_id" integer NOT NULL,
-	"team_id" integer NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"question_id" uuid NOT NULL,
+	"team_id" uuid NOT NULL,
 	"status" submission_status DEFAULT 'Pending' NOT NULL,
-	"submission" text[],
-	"points" integer,
-	"time" timestamp
+	"submission" text[] NOT NULL,
+	"points" integer DEFAULT 0 NOT NULL,
+	"time" timestamp NOT NULL,
+	"result" text,
+	"error" text,
+	"language" text NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS "team_members" (
-	"team_id" integer NOT NULL,
-	"user_id" integer NOT NULL
+	"team_id" uuid NOT NULL,
+	"user_id" uuid NOT NULL
 );
 --> statement-breakpoint
 ALTER TABLE "team_members" ADD CONSTRAINT "team_members_team_id_user_id" PRIMARY KEY("team_id","user_id");
 
 CREATE TABLE IF NOT EXISTS "teams" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"name" varchar,
-	"competition_id" integer NOT NULL
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"name" varchar NOT NULL,
+	"competition_id" uuid NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS "users" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"username" varchar NOT NULL,
 	"roles" roles[] DEFAULT '{User}' NOT NULL
 );

@@ -17,7 +17,7 @@ type Submission = InferModel<typeof submissions> & {
 };
 
 type SubmissionResult = PistonExecuteResult & {
-  submissionId: number;
+  submissionId: string;
 };
 
 const queue = new Queue<Submission, SubmissionResult, "judging">(

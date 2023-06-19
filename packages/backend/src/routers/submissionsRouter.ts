@@ -15,7 +15,7 @@ import pistonClient from "../libs/piston/client";
 
 const submissionsRouter = t.router({
   getCompetitionSubmissions: adminProcedure
-    .input(z.number())
+    .input(z.string())
     .query(({ ctx, input }) => {
       return ctx.db
         .select({
@@ -34,7 +34,7 @@ const submissionsRouter = t.router({
     }),
 
   getMyTeamsQuestionSubmissions: authedProcedure
-    .input(z.number().describe("The question Id"))
+    .input(z.string().describe("The question Id"))
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id; // The user id of the user making the request
 

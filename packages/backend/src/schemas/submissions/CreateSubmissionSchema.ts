@@ -8,8 +8,8 @@ const FileSchema = z.object({
 });
 
 const CreateSubmissionSchema = z.object({
-    teamId: z.number(),
-    questionId: z.number(),
+    teamId: z.string(),
+    questionId: z.string(),
     files: z.array(FileSchema),
     language: z.string(),
 });

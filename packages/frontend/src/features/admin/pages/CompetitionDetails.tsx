@@ -3,20 +3,16 @@ import { trpc } from "../../../utils/trpc";
 import { z } from "zod";
 import { Container } from "@chakra-ui/react";
 
-export async function loader({params}: LoaderFunctionArgs) {
-    const id = await z.string().regex(/^\d+$/).transform(Number).parseAsync(params.competitionId)
-    return id
+export async function loader({ params }: LoaderFunctionArgs) {
+  const id = await z.string().uuid().parseAsync(params.competitionId);
+  return id;
 }
 
-export function Component () {
-    const competitionId = useLoaderData() as number
+export function Component() {
+  const competitionId = useLoaderData() as string;
 
-    const competition = trpc.competitions.getAdminCompetitionDetails.useQuery(competitionId)
+  const competition =
+    trpc.competitions.getAdminCompetitionDetails.useQuery(competitionId);
 
-    return (
-        <Container>
-            {competition.data?.name}
-        </Container>
-    )
-
+  return <Container>{competition.data?.name}</Container>;
 }
