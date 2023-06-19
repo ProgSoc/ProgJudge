@@ -5,34 +5,43 @@ import SuperJSON from "superjson";
 import { InferModel } from "drizzle-orm";
 import { users } from "./db/schema";
 
-
-
 export const createContext = ({
   req,
 }: trpcExpress.CreateExpressContextOptions) => ({
-    user: req.user as InferModel<typeof users, "select"> | undefined,
-    db: db,
-    logout: () => new Promise<void>((resolve, reject) => {
+  user: req.user as InferModel<typeof users, "select"> | undefined,
+  db: db,
+  logout: () =>
+    new Promise<void>((resolve, reject) => {
       req.session.destroy((err) => {
         if (err) {
-          reject(err)
+          reject(err);
         } else {
-          resolve()
+          resolve();
         }
-      })
-    })
+      });
+    }),
+  login: (user: InferModel<typeof users, "select">) =>
+    new Promise<void>((resolve, reject) => {
+      req.login(user, (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    }),
 }); // no context
 
 type Context = inferAsyncReturnType<typeof createContext>;
 
 export const t = initTRPC.context<Context>().create({
-  transformer: SuperJSON
+  transformer: SuperJSON,
 });
 
 const isAuthed = t.middleware((opts) => {
   const { ctx } = opts;
   if (!ctx.user) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
+    throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return opts.next({
     ctx: {
@@ -45,10 +54,10 @@ const isAuthed = t.middleware((opts) => {
 const isAdmin = t.middleware((opts) => {
   const { ctx } = opts;
   if (!ctx.user) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
+    throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   if (!ctx.user.roles.includes("Admin")) {
-    throw new TRPCError({ code: 'FORBIDDEN' });
+    throw new TRPCError({ code: "FORBIDDEN" });
   }
   return opts.next({
     ctx: {
@@ -58,8 +67,8 @@ const isAdmin = t.middleware((opts) => {
   });
 });
 
-export const publicProcedure = t.procedure
+export const publicProcedure = t.procedure;
 
-export const authedProcedure = t.procedure.use(isAuthed)
+export const authedProcedure = t.procedure.use(isAuthed);
 
-export const adminProcedure = t.procedure.use(isAuthed).use(isAdmin)
+export const adminProcedure = t.procedure.use(isAuthed).use(isAdmin);

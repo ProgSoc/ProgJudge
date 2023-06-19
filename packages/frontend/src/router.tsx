@@ -4,6 +4,8 @@ import CreateCompetition from "./features/admin/pages/CreateCompetition";
 import ListCompetitions from "./features/admin/pages/ListCompetitions";
 import DefaultLayout from "./layouts/DefaultLayout";
 import AdminLayout from "./layouts/AdminLayout";
+import AuthLayout from "./layouts/AuthLayout";
+import UnAuthLayout from "./layouts/UnAuthLayout";
 
 const router = createBrowserRouter([
   {
@@ -79,8 +81,22 @@ const router = createBrowserRouter([
         ],
       },
       {
-        path: "login",
-        lazy: () => import("./features/auth/pages/Login"),
+        element: <AuthLayout />,
+        children: [
+          {
+            path: "profile",
+            lazy: () => import("./features/auth/pages/Profile"),
+          },
+        ],
+      },
+      {
+        element: <UnAuthLayout />,
+        children: [
+          {
+            path: "login",
+            lazy: () => import("./features/auth/pages/Login"),
+          },
+        ],
       },
     ],
   },

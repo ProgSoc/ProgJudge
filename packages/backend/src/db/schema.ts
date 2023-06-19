@@ -47,7 +47,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 export const providerEnum = pgEnum("provider_providers", [
   "Google",
   "Github",
-  "Email",
+  "Local",
   "Discord",
 ]);
 
@@ -69,6 +69,8 @@ export const providers = pgTable(
     refreshToken: text("refresh_token"),
     /** The access token expires at */
     accessTokenExpires: text("access_token_expires"),
+    /** Password (argon2) */
+    password: text("password"),
   },
   (table) => ({
     pk: primaryKey(table.userId, table.provider),
