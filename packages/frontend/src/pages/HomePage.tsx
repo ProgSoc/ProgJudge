@@ -11,12 +11,6 @@ import { Link } from "react-router-dom";
 
 export function Component() {
   const me = trpc.auth.getMe.useQuery();
-  const isAuthed = !!me.data;
-  const providers = trpc.auth.getMyConnections.useQuery(undefined, {
-    enabled: isAuthed,
-  });
-
-  console.log(providers.data);
 
   return (
     <Container maxW={"container.md"}>

@@ -15,9 +15,9 @@ export default function AdminLayout() {
     });
   }, [toast]);
 
-  if (me.isLoading || !me.data) {
+  if (me.isLoading || me.data === undefined) {
     return <Spinner />;
-  } else if (me.data.roles.includes("Admin")) {
+  } else if (me.data?.roles.includes("Admin")) {
     return <Outlet />;
   } else {
     toastNoAdmin();
