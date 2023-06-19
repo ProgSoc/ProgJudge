@@ -1,11 +1,12 @@
-import { Box, Heading, SimpleGrid, Stack, Tag } from "@chakra-ui/react";
+import { Box, Heading, SimpleGrid, Stack, Tag, useColorMode } from "@chakra-ui/react";
 import { trpc } from "../../../utils/trpc";
 
 export default function ConnectionsCard() {
   const providers = trpc.auth.getMyConnections.useQuery();
+  const { colorMode} = useColorMode()
 
   return (
-    <Box borderRadius={"md"} borderWidth={"1px"} borderColor={"gray.200"} p={2}>
+    <Box borderRadius={"md"} borderWidth={"1px"} borderColor={colorMode === "light" ? "gray.200" : "gray.600"} p={2}>
       <Stack spacing={2}>
         <Heading size={"md"} fontWeight={"semibold"} textAlign={"center"}>
           Connections

@@ -7,6 +7,7 @@ import {
   FormHelperText,
   Button,
   useToast,
+  useColorMode,
 } from "@chakra-ui/react";
 import { SubmitHandler } from "react-hook-form";
 import { z } from "zod";
@@ -36,6 +37,8 @@ export default function RegisterForm() {
       });
     },
   });
+
+  const { colorMode} = useColorMode()
 
   const onSubmit: SubmitHandler<z.infer<typeof RegisterSchema>> = (data) =>
     registerLocal.mutateAsync(data);

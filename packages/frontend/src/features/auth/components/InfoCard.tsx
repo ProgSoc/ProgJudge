@@ -6,6 +6,7 @@ import {
   StatNumber,
   StatHelpText,
   Box,
+  useColorMode,
 } from "@chakra-ui/react";
 import { providers } from "../../../../../backend/src/db/schema";
 import { trpc } from "../../../utils/trpc";
@@ -13,9 +14,10 @@ import { trpc } from "../../../utils/trpc";
 export default function InfoCard() {
   const me = trpc.auth.getMe.useQuery();
   const providers = trpc.auth.getMyConnections.useQuery();
+  const { colorMode} = useColorMode()
   
   return (
-    <Box borderRadius={"md"} borderWidth={"1px"} borderColor={"gray.200"} p={2}>
+    <Box borderRadius={"md"} borderWidth={"1px"} borderColor={colorMode === "light" ? "gray.200" : "gray.600"} p={2}>
       <Stack spacing={2} textAlign={"center"}>
         <Heading size={"md"} fontWeight={"semibold"}>
           Your Info

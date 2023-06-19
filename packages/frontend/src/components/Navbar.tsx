@@ -2,11 +2,14 @@ import {
   Box,
   Button,
   Flex,
+  HStack,
+  Spacer,
   Stack,
   useColorMode,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
 import { trpc } from "../utils/trpc";
+import ThemeIconButton from "./ThemeIconButton";
 
 export default function Navbar() {
   const { colorMode } = useColorMode();
@@ -20,7 +23,7 @@ export default function Navbar() {
 
   return (
     <Box>
-      <Flex
+      <HStack
         bg={colorMode === "light" ? "gray.100" : "gray.900"}
         minH="60px"
         py={{ base: 2 }}
@@ -29,26 +32,24 @@ export default function Navbar() {
         borderStyle={"solid"}
         borderColor={colorMode === "light" ? "gray.200" : "gray.700"}
         align={"center"}
+        spacing={4}
       >
-        <Stack
-          flex={{ base: 1, md: 0 }}
-          justify={"flex-end"}
-          direction={"row"}
-          spacing={6}
-        >
+        
           {me.data === null ? (
-            <Button as={Link} to="/login">
+            <Button as={Link} to="/login" variant={"link"}>
               Login
             </Button>
           ) : (
-            <Button onClick={() => logout.mutate()} isLoading={logout.isLoading}>Logout</Button>
+            <Button onClick={() => logout.mutate()} isLoading={logout.isLoading} variant={"link"}>Logout</Button>
           )}
 
-          <Button as={Link} to="/admin/competitions">
-            Docs
+          <Button as={Link} to="/admin/competitions" variant={"link"}>
+            Admin
           </Button>
-        </Stack>
-      </Flex>
+          <Spacer />
+          <ThemeIconButton />
+       
+      </HStack>
     </Box>
   );
 }

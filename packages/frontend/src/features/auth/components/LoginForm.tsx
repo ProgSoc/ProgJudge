@@ -13,6 +13,7 @@ import { z } from "zod";
 import LoginSchema from "../../../../../backend/src/schemas/auth/LoginSchema";
 import useZodForm from "../../../hooks/useZodForm";
 import { trpc } from "../../../utils/trpc";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginForm() {
   const {
@@ -23,12 +24,15 @@ export default function LoginForm() {
     schema: LoginSchema,
   });
 
-  const toast = useToast()
+  const toast = useToast();
 
-  const context = trpc.useContext()
+  const context = trpc.useContext();
+  const navigate = useNavigate()
+
   const login = trpc.auth.loginLocal.useMutation({
     onSuccess: () => {
-      context.auth.getMe.invalidate()
+      context.auth.getMe.invalidate();
+      navigate('/')
     },
     onError: (error) => {
       toast({
@@ -37,11 +41,13 @@ export default function LoginForm() {
         status: "error",
         duration: 5000,
         isClosable: true,
-      })
-    }
+      });
+    },
   });
 
-  const onSubmit: SubmitHandler<z.infer<typeof LoginSchema>> = (data) => login.mutateAsync(data);
+  const onSubmit: SubmitHandler<z.infer<typeof LoginSchema>> = async (data) => {
+    await login.mutateAsync(data);
+  };
 
   return (
     <Stack as="form" onSubmit={handleSubmit(onSubmit)}>
