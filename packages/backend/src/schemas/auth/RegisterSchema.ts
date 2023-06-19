@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 const RegisterSchema = z.object({
-    username: z.string(),
-    password: z.string(),
-    confirmPassword: z.string(),
+    username: z.string().min(4),
+    password: z.string().min(8),
+    confirmPassword: z.string().min(8),
 }).superRefine(({confirmPassword, password}, ctx) => {
     if (password !== confirmPassword) {
         ctx.addIssue({
