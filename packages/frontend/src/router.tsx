@@ -3,13 +3,16 @@ import AdminHome from "./features/admin/pages/AdminHome";
 import CreateCompetition from "./features/admin/pages/CreateCompetition";
 import ListCompetitions from "./features/admin/pages/ListCompetitions";
 import DefaultLayout from "./layouts/DefaultLayout";
+import AdminLayout from "./layouts/AdminLayout";
 
 const router = createBrowserRouter([
   {
     element: <DefaultLayout />,
     children: [
+      { index: true, lazy: () => import("./pages/HomePage") },
       {
         path: "admin",
+        element: <AdminLayout />,
         children: [
           {
             index: true,
@@ -51,24 +54,25 @@ const router = createBrowserRouter([
                       },
                     ],
                   },
-                  {
-                    path: "teams",
-                    children: [
-                        {
-                            index: true,
-                            lazy: () => import("./features/admin/pages/CompetitionTeams")
-                        },
-                        {
-                            path: "create",
-                            lazy: () => import("./features/admin/pages/CreateCompetitionTeam")
-                        },
-                        {
-                            path: ":teamId",
-                            lazy: () => import("./features/admin/pages/TeamDetails")
-                        }
-                    ]
-                  }
                 ],
+              },
+            ],
+          },
+          {
+            path: "teams",
+            children: [
+              {
+                index: true,
+                lazy: () => import("./features/admin/pages/CompetitionTeams"),
+              },
+              {
+                path: "create",
+                lazy: () =>
+                  import("./features/admin/pages/CreateCompetitionTeam"),
+              },
+              {
+                path: ":teamId",
+                lazy: () => import("./features/admin/pages/TeamDetails"),
               },
             ],
           },

@@ -10,9 +10,16 @@ const teamsRouter = t.router({
    * Get all the teams for a specific competition
    */
   getCompetitionTeams: adminProcedure
-    .input(z.string())
+    .input(z.string().optional())
     .query(({ ctx, input }) => {
-      return ctx.db.select().from(teams).where(eq(teams.competitionId, input));
+      if (!input) {
+        return ctx.db.select().from(teams);
+      } else {
+        return ctx.db
+          .select()
+          .from(teams)
+          .where(eq(teams.competitionId, input));
+      }
     }),
   /**
    * Create team
@@ -107,33 +114,35 @@ const teamsRouter = t.router({
         .leftJoin(users, eq(teamMembers.userId, users.id));
     }),
 
-  getTeamMembers: authedProcedure.input(z.string()).query(async ({ ctx, input }) => {
-    const userId = ctx.user.id;
-    const teamId = input;
+  getTeamMembers: authedProcedure
+    .input(z.string())
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+      const teamId = input;
 
-    const isUserMemberOfTeam = await ctx.db
-      .select()
-      .from(teamMembers)
-      .where(
-        and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId))
-      );
+      const isUserMemberOfTeam = await ctx.db
+        .select()
+        .from(teamMembers)
+        .where(
+          and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId))
+        );
 
-    if (!isUserMemberOfTeam) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Failed to find team",
-      });
-    }
+      if (!isUserMemberOfTeam) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Failed to find team",
+        });
+      }
 
-    return ctx.db
-      .select({
-        id: users.id,
-        name: users.username,
-      })
-      .from(teamMembers)
-      .where(eq(teamMembers.teamId, input))
-      .leftJoin(users, eq(teamMembers.userId, users.id));
-  }),
+      return ctx.db
+        .select({
+          id: users.id,
+          name: users.username,
+        })
+        .from(teamMembers)
+        .where(eq(teamMembers.teamId, input))
+        .leftJoin(users, eq(teamMembers.userId, users.id));
+    }),
 
   getAdminTeam: adminProcedure
     .input(z.string().describe("teamId"))

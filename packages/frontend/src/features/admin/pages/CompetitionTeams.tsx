@@ -3,21 +3,26 @@ import { z } from "zod";
 import { trpc } from "../../../utils/trpc";
 import { Box, Container, Heading } from "@chakra-ui/react";
 
-export async function loader({ params }: LoaderFunctionArgs) {
-  const id = await z.string().uuid().parseAsync(params.competitionId);
-  return id;
+const searchParamsSchema = z.object({
+  competitionId: z.string().uuid().optional(),
+});
+
+export async function loader({ params, request: { url} }: LoaderFunctionArgs) {
+  const reqUrl = new URL(url);
+  const rawSearchParams = Object.fromEntries(reqUrl.searchParams.entries());
+
+  const searchParams = await searchParamsSchema.parseAsync(rawSearchParams);
+  return searchParams;
 }
 
 export function Component() {
-  const competitionId = useLoaderData() as string;
+  const {competitionId} = useLoaderData() as z.infer<typeof searchParamsSchema>;
   const competitionTeams =
     trpc.teams.getCompetitionTeams.useQuery(competitionId);
-  const competition =
-    trpc.competitions.getAdminCompetitionDetails.useQuery(competitionId);
 
   return (
     <Container maxW={"container.md"}>
-      <Heading>{competition.data?.name ?? "Loading"} Teams</Heading>
+      <Heading>Teams</Heading>
       <Box
         borderRadius={"md"}
         borderWidth={"1px"}
