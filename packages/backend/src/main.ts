@@ -71,65 +71,68 @@ async function bootstrap() {
 
     app.get(
       "/auth/github/callback",
-      passport.authenticate("github", { failureRedirect: "/login" }),
-      function (req, res) {
-        // Successful authentication, redirect home.
-        if (req.user) {
-          if (req.user.roles.includes("Admin")) {
-            return res.redirect(env.FRONTEND_URL + "/admin");
-          }
-        }
-        return res.redirect(env.FRONTEND_URL);
-      }
+      passport.authenticate("github", {
+        failureRedirect: env.FRONTEND_URL + "/login",
+        successRedirect: env.FRONTEND_URL,
+      })
     );
 
     bootstrapLogger.success("Github auth enabled");
   }
 
-  if (env.DISCORD_CALLBACK_URL && env.DISCORD_CLIENT_ID && env.DISCORD_CLIENT_SECRET) {
-    passport.use(discordStrategy(env.DISCORD_CLIENT_ID, env.DISCORD_CLIENT_SECRET, env.DISCORD_CALLBACK_URL))
+  if (
+    env.DISCORD_CALLBACK_URL &&
+    env.DISCORD_CLIENT_ID &&
+    env.DISCORD_CLIENT_SECRET
+  ) {
+    passport.use(
+      discordStrategy(
+        env.DISCORD_CLIENT_ID,
+        env.DISCORD_CLIENT_SECRET,
+        env.DISCORD_CALLBACK_URL
+      )
+    );
 
     app.get("/auth/discord", passport.authenticate("discord"));
 
     app.get(
       "/auth/discord/callback",
-      passport.authenticate("discord", { failureRedirect: "/login" }),
-      function (req, res) {
-        // Successful authentication, redirect home.
-        if (req.user) {
-          if (req.user.roles.includes("Admin")) {
-            return res.redirect(env.FRONTEND_URL + "/admin");
-          }
-        }
-        return res.redirect(env.FRONTEND_URL);
-      }
+      passport.authenticate("discord", {
+        failureRedirect: env.FRONTEND_URL + "/login",
+        successRedirect: env.FRONTEND_URL,
+      })
     );
 
-    bootstrapLogger.success("Discord auth enabled")
+    bootstrapLogger.success("Discord auth enabled");
   }
 
-  if (env.GOOGLE_CALLBACK_URL && env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
+  if (
+    env.GOOGLE_CALLBACK_URL &&
+    env.GOOGLE_CLIENT_ID &&
+    env.GOOGLE_CLIENT_SECRET
+  ) {
     passport.use(
-      googleStrategy(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, env.GOOGLE_CALLBACK_URL)
+      googleStrategy(
+        env.GOOGLE_CLIENT_ID,
+        env.GOOGLE_CLIENT_SECRET,
+        env.GOOGLE_CALLBACK_URL
+      )
     );
 
-    app.get("/auth/google", passport.authenticate("google", { scope: ["profile"] }));
+    app.get(
+      "/auth/google",
+      passport.authenticate("google", { scope: ["profile"] })
+    );
 
     app.get(
       "/auth/google/callback",
-      passport.authenticate("google", { failureRedirect: "/login" }),
-      function (req, res) {
-        // Successful authentication, redirect home.
-        if (req.user) {
-          if (req.user.roles.includes("Admin")) {
-            return res.redirect(env.FRONTEND_URL + "/admin");
-          }
-        }
-        return res.redirect(env.FRONTEND_URL);
-      }
+      passport.authenticate("google", {
+        failureRedirect: env.FRONTEND_URL + "/login",
+        successRedirect: env.FRONTEND_URL,
+      })
     );
 
-    bootstrapLogger.success("Google auth enabled")
+    bootstrapLogger.success("Google auth enabled");
   }
 
   passport.serializeUser(function (user, done) {
