@@ -17,9 +17,16 @@ const envVariables = z.object({
     /**
      * Github OAuth
      */
-    GITHUB_CLIENT_ID: z.string().default(''),
-    GITHUB_CLIENT_SECRET: z.string().default(''),
-    GITHUB_CALLBACK_URL: z.string().default('http://localhost:3000/auth/github/callback'),
+    GITHUB_CLIENT_ID: z.string().optional(),
+    GITHUB_CLIENT_SECRET: z.string().optional(),
+    GITHUB_CALLBACK_URL: z.string().url().optional(),
+    /**
+     * Discord OAuth
+     */
+    DISCORD_CLIENT_ID: z.string().optional(),
+    DISCORD_CLIENT_SECRET: z.string().optional(),
+    DISCORD_CALLBACK_URL: z.string().url().optional(),
+
     /**
      * Piston API
      */

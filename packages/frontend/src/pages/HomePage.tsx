@@ -11,6 +11,12 @@ import { Link } from "react-router-dom";
 
 export function Component() {
   const me = trpc.auth.getMe.useQuery();
+  const isAuthed = !!me.data;
+  const providers = trpc.auth.getMyConnections.useQuery(undefined, {
+    enabled: isAuthed,
+  });
+
+  console.log(providers.data);
 
   return (
     <Container maxW={"container.md"}>
@@ -18,9 +24,16 @@ export function Component() {
         <Heading>Home</Heading>
         <p>This is the home page.</p>
         <HStack>
-          {me.data ? <Heading size="md" fontWeight={"semibold"}>
-            Welcome, {me.data.username}!
-          </Heading> : (
+          {me.data ? (
+            <Stack spacing={4}>
+              <Heading size="md" fontWeight={"semibold"}>
+                Welcome, {me.data.username}!
+              </Heading>
+              <Button as={Link} to="/profile">
+                Profile
+              </Button>
+            </Stack>
+          ) : (
             <Button as={Link} to="/login">
               Login
             </Button>

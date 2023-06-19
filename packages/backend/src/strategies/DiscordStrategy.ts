@@ -1,26 +1,33 @@
-import { Strategy } from "passport-github2";
+import { Strategy } from "passport-discord";
 import type * as oauth2 from "passport-oauth2";
 import db from "../db/db";
 import { providers, users } from "../db/schema";
 import { eq } from "drizzle-orm";
 
-type VerifyFunctionParams = Parameters<oauth2.VerifyFunctionWithRequest>;
-
-const verify: oauth2.VerifyFunctionWithRequest = async function verify(
-  req: VerifyFunctionParams["0"],
-  accessToken: VerifyFunctionParams["1"],
-  refreshToken: VerifyFunctionParams["2"],
-  profile: VerifyFunctionParams["3"],
-  done: VerifyFunctionParams["4"]
-) {
-  let userId = req.user?.id;
+const discordStrategy = (
+  clientID: string,
+  clientSecret: string,
+  callbackURL: string
+) =>
+  new Strategy(
+    {
+      clientID,
+      clientSecret,
+      callbackURL,
+      passReqToCallback: true,
+      scope: [
+        "identify",
+      ]
+    },
+    async (req, accessToken, refreshToken, profile, done) => {
+      let userId = req.user?.id;
 
       /**
        * If the user is logged in, check if the provider already exists
        */
       const existingProvider = await db.query.providers.findFirst({
         where: (users, { eq, and }) =>
-          and(eq(users.provider, "Github"), eq(users.providerId, profile.id)),
+          and(eq(users.provider, "Discord"), eq(users.providerId, profile.id)),
         with: {
           user: true,
         },
@@ -57,7 +64,7 @@ const verify: oauth2.VerifyFunctionWithRequest = async function verify(
       const newProvider = await db
         .insert(providers)
         .values({
-          provider: "Github",
+          provider: "Discord",
           providerId: profile.id,
           userId,
           accessToken,
@@ -80,16 +87,7 @@ const verify: oauth2.VerifyFunctionWithRequest = async function verify(
       }
 
       return done(null, user);
-};
+    }
+  );
 
-const githubStrategy = (clientID: string, clientSecret: string, callbackURL: string) => new Strategy(
-  {
-    callbackURL,
-    clientID,
-    clientSecret,
-    passReqToCallback: true,
-  },
-  verify
-);
-
-export default githubStrategy;
+export default discordStrategy;

@@ -1,6 +1,6 @@
 import { InferModel, eq } from "drizzle-orm";
 import { authedProcedure, publicProcedure, t } from "../trpc";
-import { teamMembers, teams, users } from "../db/schema";
+import { providers, teamMembers, teams, users } from "../db/schema";
 
 const authRouter = t.router({
   logout: authedProcedure.mutation(({ ctx }) => {
@@ -24,8 +24,19 @@ const authRouter = t.router({
 
     return teamsQuery;
   }),
+  getMyConnections: authedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.user.id;
 
+    const connectionsQuery = await ctx.db
+      .select({
+        id: providers.providerId,
+        name: providers.provider,
+      })
+      .from(providers)
+      .where(eq(providers.userId, userId));
 
+    return connectionsQuery;
+  }),
 });
 
 export default authRouter;

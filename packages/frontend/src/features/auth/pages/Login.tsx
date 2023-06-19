@@ -5,6 +5,7 @@ export function Component () {
         <Container maxW={"container.md"}>
         <HStack py={2}>
             <Button as="a" href="/api/auth/github">Github</Button>
+            <Button as="a" href="/api/auth/discord">Discord</Button>
         </HStack>
         </Container>
     )

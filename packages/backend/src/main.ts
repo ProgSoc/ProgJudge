@@ -14,6 +14,7 @@ import passport from "passport";
 import githubStrategy from "./strategies/GithubStrategy";
 import db from "./db/db";
 import pistonClient from "./libs/piston/client";
+import discordStrategy from "./strategies/DiscordStrategy";
 
 const bootstrapLogger = logger.scope("Bootstrap");
 
@@ -52,7 +53,59 @@ async function bootstrap() {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  passport.use(githubStrategy);
+  if (
+    env.GITHUB_CALLBACK_URL &&
+    env.GITHUB_CLIENT_ID &&
+    env.GITHUB_CLIENT_SECRET
+  ) {
+    passport.use(
+      githubStrategy(
+        env.GITHUB_CLIENT_ID,
+        env.GITHUB_CLIENT_SECRET,
+        env.GITHUB_CALLBACK_URL
+      )
+    );
+
+    app.get("/auth/github", passport.authenticate("github"));
+
+    app.get(
+      "/auth/github/callback",
+      passport.authenticate("github", { failureRedirect: "/login" }),
+      function (req, res) {
+        // Successful authentication, redirect home.
+        if (req.user) {
+          if (req.user.roles.includes("Admin")) {
+            return res.redirect(env.FRONTEND_URL + "/admin");
+          }
+        }
+        return res.redirect(env.FRONTEND_URL);
+      }
+    );
+
+    bootstrapLogger.success("Github auth enabled");
+  }
+
+  if (env.DISCORD_CALLBACK_URL && env.DISCORD_CLIENT_ID && env.DISCORD_CLIENT_SECRET) {
+    passport.use(discordStrategy(env.DISCORD_CLIENT_ID, env.DISCORD_CLIENT_SECRET, env.DISCORD_CALLBACK_URL))
+
+    app.get("/auth/discord", passport.authenticate("discord"));
+
+    app.get(
+      "/auth/discord/callback",
+      passport.authenticate("discord", { failureRedirect: "/login" }),
+      function (req, res) {
+        // Successful authentication, redirect home.
+        if (req.user) {
+          if (req.user.roles.includes("Admin")) {
+            return res.redirect(env.FRONTEND_URL + "/admin");
+          }
+        }
+        return res.redirect(env.FRONTEND_URL);
+      }
+    );
+
+    bootstrapLogger.success("Discord auth enabled")
+  }
 
   passport.serializeUser(function (user, done) {
     done(null, user.id);
@@ -64,22 +117,6 @@ async function bootstrap() {
     });
     done(null, user);
   });
-
-  app.get("/auth/github", passport.authenticate("github"));
-
-  app.get(
-    "/auth/github/callback",
-    passport.authenticate("github", { failureRedirect: "/login" }),
-    function (req, res) {
-      // Successful authentication, redirect home.
-      if (req.user) {
-        if (req.user.roles.includes("Admin")) {
-          return res.redirect(env.FRONTEND_URL + "/admin");
-        }
-      }
-      return res.redirect(env.FRONTEND_URL);
-    }
-  );
 
   app.use(
     "/trpc",
@@ -94,7 +131,6 @@ async function bootstrap() {
   // } catch (error) {
   //   console.log(error)
   // }
- 
 
   // const execRes = await pistonClient.execute({
   //   language: "python",
