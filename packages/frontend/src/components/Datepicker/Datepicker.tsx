@@ -21,7 +21,7 @@ export default function DatePicker() {
   } = useDatePicker({
     selectedDates,
     onDatesChange,
-    dates: { mode: "single" },
+    dates: { mode: "range" },
     calendar: {
       startDay: 1,
     },
@@ -68,7 +68,20 @@ export default function DatePicker() {
             {...dayButton(dpDay, { onClick: onDayClick })}
             key={dpDay.$date.toDateString()}
             colorScheme={
-              dpDay.selected || dpDay.range == "in-range" ? "blue" : undefined
+              dpDay.selected ||
+              dpDay.range === "in-range" ||
+              dpDay.range === "will-be-in-range"
+                ? "blue"
+                : undefined
+            }
+            variant={
+              dpDay.selected ||
+              dpDay.range === "range-start" ||
+              dpDay.range === "range-end" ||
+              dpDay.range === "will-be-range-end" ||
+              dpDay.range === "will-be-range-start"
+                ? "solid"
+                : undefined
             }
             justifyContent={"center"}
           >
