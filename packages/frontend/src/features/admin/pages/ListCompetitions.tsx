@@ -32,7 +32,7 @@ export default function ListCompetitions() {
             icon={<FaPlus />}
           />
         </Flex>
-        <SimpleGrid columns={competitions.data?.length ?? 1} spacing={3}>
+        <SimpleGrid columns={!competitions.data?.length ? 1 : 3} spacing={3}>
           {competitions.data?.length ? (
             competitions.data?.map((competition) => (
               <CompetitionCard key={competition.id} {...competition} />

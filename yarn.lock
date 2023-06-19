@@ -1434,6 +1434,11 @@
     redux-thunk "^2.4.2"
     reselect "^4.1.8"
 
+"@rehookify/datepicker@^5.2.2":
+  version "5.2.2"
+  resolved "https://registry.yarnpkg.com/@rehookify/datepicker/-/datepicker-5.2.2.tgz#b0843bc080e34ed5a8e02c71d7a14e07bf55b782"
+  integrity sha512-dg3d4PAKl+t5lTBqvzznrA8HA2qQ+QPgIY2xSaKFSUEo45sPsb6MKQ0QnyyLN1QE0vPykAlz+AJT3ltwfdYqKg==
+
 "@remix-run/router@1.6.3":
   version "1.6.3"
   resolved "https://registry.yarnpkg.com/@remix-run/router/-/router-1.6.3.tgz#8205baf6e17ef93be35bf62c37d2d594e9be0dad"

@@ -8,6 +8,7 @@ import useZodForm from "../../../hooks/useZodForm";
 import { z } from "zod";
 import { SubmitHandler } from "react-hook-form";
 import { trpc } from "../../../utils/trpc";
+import DatePicker from "../../../components/Datepicker/Datepicker";
 
 export default function CreateCompetition() {
   const createCompetition = trpc.competitions.create.useMutation();
@@ -32,7 +33,9 @@ export default function CreateCompetition() {
 
   return (
     <Container>
+         <DatePicker />
       <Stack as={"form"} onSubmit={handleSubmit(onSubmit)}>
+     
         {/* <FormControl isInvalid={!!errors.name}>
           <FormLabel>Name</FormLabel>
           <Input {...register("name")} />
