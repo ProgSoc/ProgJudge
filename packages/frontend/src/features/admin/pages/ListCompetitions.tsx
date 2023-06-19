@@ -17,7 +17,7 @@ import { trpc } from "../../../utils/trpc";
 import { Link } from "react-router-dom";
 import type { Competition } from "../../../../../backend/src/db/types";
 import { FaPlus } from "react-icons/fa";
-import { MdGroup } from 'react-icons/md'
+import { MdGroup, MdDelete } from 'react-icons/md'
 export default function ListCompetitions() {
   const competitions = trpc.competitions.getAll.useQuery();
 
@@ -60,6 +60,12 @@ type CompetitionCardProps = Competition;
 
 function CompetitionCard(props: CompetitionCardProps) {
   const { colorMode } = useColorMode();
+  const context = trpc.useContext()
+  const deleteCompetition = trpc.competitions.deleteCompetition.useMutation({
+    onSuccess: () => {
+      context.competitions.getAll.invalidate()
+    }
+  });
   return (
     <Box
       borderRadius={"md"}
@@ -85,6 +91,9 @@ function CompetitionCard(props: CompetitionCardProps) {
         </Heading>
         <ButtonGroup size="md" justifyContent={"center"}>
           <IconButton icon={<MdGroup />} as={Link} aria-label="Teams" to={`/admin/teams?competitionId=${props.id}`}/>
+          <IconButton icon={<MdDelete />} aria-label="Delete" onClick={() => {
+            deleteCompetition.mutate(props.id)
+          }} isLoading={deleteCompetition.isLoading}/>
         </ButtonGroup>
       </Stack>
     </Box>

@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { adminProcedure, publicProcedure, t } from "../trpc";
 import CreateCompetitionSchema from "../schemas/competitions/CreateCompetitionSchema";
-import { competitions } from "../db/schema";
+import { competitions, questions, submissions, teams } from "../db/schema";
 import { TRPCError } from "@trpc/server";
 import EditCompetitionSchema from "../schemas/competitions/EditCompetitionSchema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 const competitionsRouter = t.router({
   /**
@@ -104,8 +104,9 @@ const competitionsRouter = t.router({
     return updatedCompetition;
   }),
 
-  getAdminCompetitionDetails: adminProcedure.input(z.string()).query(
-    async ({ ctx, input }) => {
+  getAdminCompetitionDetails: adminProcedure
+    .input(z.string())
+    .query(async ({ ctx, input }) => {
       const adminComps = await ctx.db
         .select()
         .from(competitions)
@@ -121,8 +122,7 @@ const competitionsRouter = t.router({
       }
 
       return competition;
-    }
-  ),
+    }),
 
   getPublicCompetitionDetails: publicProcedure
     .input(z.string())
@@ -144,6 +144,53 @@ const competitionsRouter = t.router({
       }
 
       return competition;
+    }),
+
+  deleteCompetition: adminProcedure
+    .input(z.string())
+    .mutation(async ({ ctx, input }) => {
+      const deletedCompetitions = await ctx.db
+        .delete(competitions)
+        .where(eq(competitions.id, input))
+        .returning();
+
+      const deleteCompetitionQuestions = await ctx.db
+        .delete(questions)
+        .where(eq(questions.competitionId, input))
+        .returning();
+
+      await ctx.db
+        .delete(teams)
+        .where(eq(teams.competitionId, input))
+        .returning();
+
+      await ctx.db
+        .delete(teams)
+        .where(eq(teams.competitionId, input))
+        .returning();
+
+      if (deleteCompetitionQuestions.length > 0) {
+        await ctx.db
+          .delete(submissions)
+          .where(
+            inArray(
+              submissions.questionId,
+              deleteCompetitionQuestions.map((q) => q.id)
+            )
+          )
+          .returning();
+      }
+
+      const deletedCompetition = deletedCompetitions.at(0);
+
+      if (!deletedCompetition) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Failed to delete competition",
+        });
+      }
+
+      return deletedCompetition;
     }),
 });
 
