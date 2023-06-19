@@ -15,6 +15,7 @@ import githubStrategy from "./strategies/GithubStrategy";
 import db from "./db/db";
 import pistonClient from "./libs/piston/client";
 import discordStrategy from "./strategies/DiscordStrategy";
+import googleStrategy from "./strategies/GoogleStrategy";
 
 const bootstrapLogger = logger.scope("Bootstrap");
 
@@ -105,6 +106,30 @@ async function bootstrap() {
     );
 
     bootstrapLogger.success("Discord auth enabled")
+  }
+
+  if (env.GOOGLE_CALLBACK_URL && env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
+    passport.use(
+      googleStrategy(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, env.GOOGLE_CALLBACK_URL)
+    );
+
+    app.get("/auth/google", passport.authenticate("google", { scope: ["profile"] }));
+
+    app.get(
+      "/auth/google/callback",
+      passport.authenticate("google", { failureRedirect: "/login" }),
+      function (req, res) {
+        // Successful authentication, redirect home.
+        if (req.user) {
+          if (req.user.roles.includes("Admin")) {
+            return res.redirect(env.FRONTEND_URL + "/admin");
+          }
+        }
+        return res.redirect(env.FRONTEND_URL);
+      }
+    );
+
+    bootstrapLogger.success("Google auth enabled")
   }
 
   passport.serializeUser(function (user, done) {

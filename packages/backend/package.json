@@ -24,6 +24,7 @@
         "passport": "^0.6.0",
         "passport-discord": "^0.1.4",
         "passport-github2": "^0.1.12",
+        "passport-google-oauth20": "^2.0.0",
         "piston-client": "^1.0.2",
         "postgres": "^3.3.5",
         "redis": "^4.6.7",
@@ -37,6 +38,7 @@
         "@types/node": "^20.3.1",
         "@types/passport": "^1.0.12",
         "@types/passport-discord": "^0.1.6",
+        "@types/passport-google-oauth20": "^2.0.11",
         "drizzle-kit": "^0.18.1",
         "tsup": "^7.0.0",
         "typescript": "^5.1.3"
