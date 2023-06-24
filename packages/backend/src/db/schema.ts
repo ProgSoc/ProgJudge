@@ -127,7 +127,10 @@ export const teams = pgTable(
       .references(() => competitions.id),
   },
   (table) => ({
-    pk: primaryKey(table.competitionId, table.name),
+    competitionTam: uniqueIndex("competition_team").on(
+      table.competitionId,
+      table.name
+    ),
   })
 );
 
@@ -269,7 +272,7 @@ export const questionInputRelations = relations(questionInputs, ({ one }) => ({
   }),
 }));
 
-export const submissionsResultEnum = pgEnum("submissionsResult", [
+export const submissionsResultStatusEnum = pgEnum("submissions_result_status", [
   "Pending",
   "PipelineFailed",
   "CompileError",
@@ -293,7 +296,7 @@ export const submissions = pgTable("submissions", {
     .notNull()
     .references(() => teams.id),
   /** The status of judging */
-  status: submissionsResultEnum("status").default(sql`'Pending'`),
+  status: submissionsResultStatusEnum("status").default(sql`'Pending'`),
   /** The executable file submitted */
   file: uuid("file")
     .notNull()
@@ -336,7 +339,7 @@ export const submissionResults = pgTable("submissionResults", {
     .notNull()
     .references(() => questionVersions.id),
   /** The status of judging */
-  status: submissionsResultEnum("status")
+  status: submissionsResultStatusEnum("status")
     .notNull()
     .default(sql`'Pending'`),
 });
@@ -407,7 +410,6 @@ export const pipelineScripts = pgTable("pipelineScripts", {
   /** The question version that this script belongs to */
   questionVersionId: uuid("questionVersionId")
     .notNull()
-    .primaryKey()
     .references(() => questionVersions.id),
 });
 

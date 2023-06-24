@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "6381d9af-6b52-461d-af80-47f3962775b5",
+  "id": "28d98690-d030-4009-92fb-4926a7b011dd",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "competitions": {
@@ -175,7 +175,7 @@
         "questionVersionId": {
           "name": "questionVersionId",
           "type": "uuid",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         }
       },
@@ -216,36 +216,36 @@
       "columns": {
         "provider": {
           "name": "provider",
-          "type": "provider_providers",
+          "type": "provider",
           "primaryKey": false,
           "notNull": true
         },
-        "provider_id": {
-          "name": "provider_id",
+        "providerId": {
+          "name": "providerId",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
-        "user_id": {
-          "name": "user_id",
+        "userId": {
+          "name": "userId",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "access_token": {
-          "name": "access_token",
+        "accessToken": {
+          "name": "accessToken",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "refresh_token": {
-          "name": "refresh_token",
+        "refreshToken": {
+          "name": "refreshToken",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "access_token_expires": {
-          "name": "access_token_expires",
+        "accessTokenExpires": {
+          "name": "accessTokenExpires",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -259,12 +259,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "providers_user_id_users_id_fk": {
-          "name": "providers_user_id_users_id_fk",
+        "providers_userId_users_id_fk": {
+          "name": "providers_userId_users_id_fk",
           "tableFrom": "providers",
           "tableTo": "users",
           "columnsFrom": [
-            "user_id"
+            "userId"
           ],
           "columnsTo": [
             "id"
@@ -274,10 +274,10 @@
         }
       },
       "compositePrimaryKeys": {
-        "providers_user_id_provider": {
-          "name": "providers_user_id_provider",
+        "providers_userId_provider": {
+          "name": "providers_userId_provider",
           "columns": [
-            "user_id",
+            "userId",
             "provider"
           ]
         }
@@ -403,8 +403,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "competition_id": {
-          "name": "competition_id",
+        "competitionId": {
+          "name": "competitionId",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -430,12 +430,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "questions_competition_id_competitions_id_fk": {
-          "name": "questions_competition_id_competitions_id_fk",
+        "questions_competitionId_competitions_id_fk": {
+          "name": "questions_competitionId_competitions_id_fk",
           "tableFrom": "questions",
           "tableTo": "competitions",
           "columnsFrom": [
-            "competition_id"
+            "competitionId"
           ],
           "columnsTo": [
             "id"
@@ -545,7 +545,7 @@
         },
         "status": {
           "name": "status",
-          "type": "submission_status",
+          "type": "submissions_result_status",
           "primaryKey": false,
           "notNull": true,
           "default": "'Pending'"
@@ -607,7 +607,7 @@
         },
         "status": {
           "name": "status",
-          "type": "submission_status",
+          "type": "submissions_result_status",
           "primaryKey": false,
           "notNull": false,
           "default": "'Pending'"
@@ -663,18 +663,18 @@
       },
       "compositePrimaryKeys": {}
     },
-    "team_members": {
-      "name": "team_members",
+    "teamMembers": {
+      "name": "teamMembers",
       "schema": "",
       "columns": {
-        "team_id": {
-          "name": "team_id",
+        "teamId": {
+          "name": "teamId",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "user_id": {
-          "name": "user_id",
+        "userId": {
+          "name": "userId",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -682,12 +682,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "team_members_team_id_teams_id_fk": {
-          "name": "team_members_team_id_teams_id_fk",
-          "tableFrom": "team_members",
+        "teamMembers_teamId_teams_id_fk": {
+          "name": "teamMembers_teamId_teams_id_fk",
+          "tableFrom": "teamMembers",
           "tableTo": "teams",
           "columnsFrom": [
-            "team_id"
+            "teamId"
           ],
           "columnsTo": [
             "id"
@@ -695,12 +695,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "team_members_user_id_users_id_fk": {
-          "name": "team_members_user_id_users_id_fk",
-          "tableFrom": "team_members",
+        "teamMembers_userId_users_id_fk": {
+          "name": "teamMembers_userId_users_id_fk",
+          "tableFrom": "teamMembers",
           "tableTo": "users",
           "columnsFrom": [
-            "user_id"
+            "userId"
           ],
           "columnsTo": [
             "id"
@@ -710,11 +710,11 @@
         }
       },
       "compositePrimaryKeys": {
-        "team_members_team_id_user_id": {
-          "name": "team_members_team_id_user_id",
+        "teamMembers_teamId_userId": {
+          "name": "teamMembers_teamId_userId",
           "columns": [
-            "team_id",
-            "user_id"
+            "teamId",
+            "userId"
           ]
         }
       }
@@ -742,21 +742,30 @@
           "primaryKey": false,
           "notNull": true
         },
-        "competition_id": {
-          "name": "competition_id",
+        "competitionId": {
+          "name": "competitionId",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "competition_team": {
+          "name": "competition_team",
+          "columns": [
+            "competitionId",
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
-        "teams_competition_id_competitions_id_fk": {
-          "name": "teams_competition_id_competitions_id_fk",
+        "teams_competitionId_competitions_id_fk": {
+          "name": "teams_competitionId_competitions_id_fk",
           "tableFrom": "teams",
           "tableTo": "competitions",
           "columnsFrom": [
-            "competition_id"
+            "competitionId"
           ],
           "columnsTo": [
             "id"
@@ -765,15 +774,7 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {
-        "teams_competition_id_name": {
-          "name": "teams_competition_id_name",
-          "columns": [
-            "competition_id",
-            "name"
-          ]
-        }
-      }
+      "compositePrimaryKeys": {}
     },
     "users": {
       "name": "users",
@@ -814,8 +815,8 @@
     }
   },
   "enums": {
-    "provider_providers": {
-      "name": "provider_providers",
+    "provider": {
+      "name": "provider",
       "values": {
         "Google": "Google",
         "Github": "Github",
@@ -830,8 +831,8 @@
         "User": "User"
       }
     },
-    "submission_status": {
-      "name": "submission_status",
+    "submissions_result_status": {
+      "name": "submissions_result_status",
       "values": {
         "Pending": "Pending",
         "PipelineFailed": "PipelineFailed",
