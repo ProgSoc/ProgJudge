@@ -32,6 +32,7 @@ const teamsRouter = t.router({
         .values({
           name: input.name,
           competitionId: input.competitionId,
+          displayName: input.displayName,
         })
         .returning();
 

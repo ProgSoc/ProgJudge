@@ -6,5 +6,9 @@
   "license": "MIT",
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "scripts": {
+    "front": "yarn workspace frontend",
+    "back": "yarn workspace backend"
+  }
 }
