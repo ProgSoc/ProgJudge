@@ -9,86 +9,13 @@ import {
   timestamp,
   uuid,
   jsonb,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 import { relations, sql } from "drizzle-orm";
-
-/**
- * Database schema for a programming competition judging system.
- */
-
-export const roleEnum = pgEnum("roles", ["Admin", "User"]);
-
-/**
- * The table that stores the user's information.
- * Username is unique.
- */
-export const users = pgTable(
-  "users",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    username: varchar("username").notNull(),
-    roles: roleEnum("roles")
-      .array()
-      .default(sql`'{User}'`)
-      .notNull(),
-  },
-  (table) => ({
-    usernameIndex: uniqueIndex("usernameIndex").on(table.username),
-  })
-);
-
-export const usersRelations = relations(users, ({ many }) => ({
-  providers: many(providers, {
-    relationName: "userOnProvider",
-  }),
-  teamMemberships: many(teamMembers, {
-    relationName: "userOnTeamMember",
-  }),
-}));
-
-export const providerEnum = pgEnum("provider", [
-  "Google",
-  "Github",
-  "Local",
-  "Discord",
-]);
-
-/**
- * The table that stores the user's authentication providers.
- */
-export const providers = pgTable(
-  "providers",
-  {
-    /** The oAuth Provider to sign in with */
-    provider: providerEnum("provider").notNull(),
-    /** The remote account id */
-    providerId: varchar("providerId").notNull(),
-    /** The Id of the connected user */
-    userId: uuid("userId")
-      .notNull()
-      .references(() => users.id),
-    /** The access token for the provider */
-    accessToken: text("accessToken"),
-    /** The refresh token for the provider */
-    refreshToken: text("refreshToken"),
-    /** The access token expires at */
-    accessTokenExpires: text("accessTokenExpires"),
-    /** Password (argon2) */
-    password: text("password"),
-  },
-  (table) => ({
-    pk: primaryKey(table.userId, table.provider),
-  })
-);
-
-export const providersRelations = relations(providers, ({ one }) => ({
-  user: one(users, {
-    fields: [providers.userId],
-    references: [users.id],
-    relationName: "userOnProvider",
-  }),
-}));
+import { users } from "./auth";
+import { executableFiles, files, pipelineScripts } from "./execution";
+import { PipelineSchema } from "../../pipelines/pipelineConfig";
 
 /**
  * The table that stores the
@@ -212,6 +139,9 @@ export const questionsRelations = relations(questions, ({ one, many }) => ({
   versions: many(questionVersions, {
     relationName: "versionOnQuestion",
   }),
+  files: many(files, {
+    relationName: "fileOnQuestion",
+  }),
 }));
 
 /**
@@ -225,7 +155,7 @@ export const questionVersions = pgTable("questionVersions", {
     .notNull()
     .references(() => questions.id),
   /** The internal name of the question */
-  pipelineConfig: jsonb("pipelineConfig").$type<{ foo: "todo" }>().notNull(),
+  pipelineConfig: jsonb("pipelineConfig").$type<PipelineSchema>().notNull(),
 });
 
 export const questionVersionRelations = relations(
@@ -239,38 +169,46 @@ export const questionVersionRelations = relations(
     pipelineScripts: many(pipelineScripts, {
       relationName: "pipelineScriptOnQuestionVersion",
     }),
+    inputs: many(questionTestCases, {
+      relationName: "testCaseOnQuestionVersion",
+    }),
   })
 );
 
-export const questionInputs = pgTable("questionInputs", {
+export const questionTestCases = pgTable("questionTestCases", {
   /** The input Id */
   id: uuid("id").primaryKey().defaultRandom(),
   /** The question that this input belongs to */
-  questionId: uuid("questionId")
+  questionVersionId: uuid("questionVersionId")
     .notNull()
-    .references(() => questions.id),
+    .references(() => questionVersions.id),
   /** The internal name of the input */
   name: varchar("name").notNull(),
   /** The display name of the input */
   displayName: varchar("displayName").notNull(),
+  /** Whether the input is hidden */
+  hidden: boolean("hidden").notNull().default(false),
   /** The file this input is associated with */
-  file: uuid("file")
+  fileId: uuid("fileId")
     .notNull()
     .references(() => files.id),
 });
 
-export const questionInputRelations = relations(questionInputs, ({ one }) => ({
-  question: one(questions, {
-    fields: [questionInputs.questionId],
-    references: [questions.id],
-    relationName: "inputOnQuestion",
-  }),
-  file: one(files, {
-    fields: [questionInputs.file],
-    references: [files.id],
-    relationName: "fileOnQuestionInput",
-  }),
-}));
+export const questionTestCaseRelations = relations(
+  questionTestCases,
+  ({ one }) => ({
+    question: one(questionVersions, {
+      fields: [questionTestCases.questionVersionId],
+      references: [questionVersions.id],
+      relationName: "testCaseOnQuestionVersion",
+    }),
+    file: one(files, {
+      fields: [questionTestCases.fileId],
+      references: [files.id],
+      relationName: "fileOnQuestionTestCase",
+    }),
+  })
+);
 
 export const submissionsResultStatusEnum = pgEnum("submissions_result_status", [
   "Pending",
@@ -356,145 +294,6 @@ export const submissionResultsRelations = relations(
       fields: [submissionResults.questionVersionId],
       references: [questionVersions.id],
       relationName: "resultOnQuestionVersion",
-    }),
-  })
-);
-
-/**
- * File (s3 storage)
- */
-export const files = pgTable("files", {
-  /** The id of the file */
-  id: uuid("id").primaryKey().defaultRandom(),
-  /** The hash of the file */
-  hash: varchar("hash").notNull(),
-  /** The filename of the file */
-  filename: varchar("filename").notNull(),
-  /** The size of the file */
-  size: integer("size").notNull(),
-  /** The mimetype of the file */
-  mimetype: varchar("mimetype").notNull(),
-  /** The s3 ref of the file */
-  ref: varchar("ref").notNull(),
-});
-
-export const filesRelations = relations(files, ({ one, many }) => ({}));
-
-export const executableFiles = pgTable("executableFiles", {
-  /** The id of the referenced file */
-  fileId: uuid("fileId")
-    .notNull()
-    .primaryKey()
-    .references(() => files.id),
-  /** The runtime to use for the file */
-  runtime: varchar("runtime").notNull(),
-});
-
-export const executableFilesRelations = relations(
-  executableFiles,
-  ({ one, many }) => ({
-    file: one(files, {
-      fields: [executableFiles.fileId],
-      references: [files.id],
-      relationName: "fileOnExecutableFile",
-    }),
-  })
-);
-
-export const pipelineScripts = pgTable("pipelineScripts", {
-  /** The id of the referenced file */
-  fileId: uuid("fileId")
-    .notNull()
-    .primaryKey()
-    .references(() => executableFiles.fileId),
-  /** The question version that this script belongs to */
-  questionVersionId: uuid("questionVersionId")
-    .notNull()
-    .references(() => questionVersions.id),
-});
-
-export const pipelineScriptsRelations = relations(
-  pipelineScripts,
-  ({ one, many }) => ({
-    file: one(executableFiles, {
-      fields: [pipelineScripts.fileId],
-      references: [executableFiles.fileId],
-      relationName: "fileOnPipelineScript",
-    }),
-    questionVersion: one(questionVersions, {
-      fields: [pipelineScripts.questionVersionId],
-      references: [questionVersions.id],
-      relationName: "pipelineScriptOnQuestionVersion",
-    }),
-    runs: many(pipelineScriptRun, {
-      relationName: "runOnPipelineScript",
-    }),
-  })
-);
-
-export const pipelineScriptRun = pgTable("pipelineScriptRun", {
-  /** The id of the run */
-  id: uuid("id").primaryKey().defaultRandom(),
-  /** The id if othe pipeline script */
-  pipelineScriptId: uuid("pipelineScriptId")
-    .notNull()
-    .references(() => pipelineScripts.fileId),
-  /** The output file */
-  outputFile: uuid("outputFile").references(() => files.id),
-});
-
-export const pipelineScriptRunRelations = relations(
-  pipelineScriptRun,
-  ({ one, many }) => ({
-    pipelineScript: one(pipelineScripts, {
-      fields: [pipelineScriptRun.pipelineScriptId],
-      references: [pipelineScripts.fileId],
-      relationName: "runOnPipelineScript",
-    }),
-    output: one(files, {
-      fields: [pipelineScriptRun.outputFile],
-      references: [files.id],
-      relationName: "outputOnPipelineScriptRun",
-    }),
-    dependentRuns: many(scriptRunDependency, {
-      relationName: "previousRunOnScriptRunDependency",
-    }),
-  })
-);
-
-export const scriptRunDependency = pgTable("scriptRunDependency", {
-  /** The id of the dependency */
-  id: uuid("id").primaryKey().defaultRandom(),
-  /** The id of the run */
-  runId: uuid("runId")
-    .notNull()
-    .references(() => pipelineScriptRun.id),
-
-  // Either one or the other below is set, can't be both
-
-  /** The optional id of the question input */
-  questionInputId: uuid("questionInputId").references(() => questionInputs.id),
-  /** The optional id of a previous script run */
-  previousRunId: uuid("previousRunId").references(() => pipelineScriptRun.id),
-});
-
-export const scriptRunDependencyRelations = relations(
-  scriptRunDependency,
-  ({ one }) => ({
-    run: one(pipelineScriptRun, {
-      fields: [scriptRunDependency.runId],
-      references: [pipelineScriptRun.id],
-      relationName: "runOnScriptRunDependency",
-    }),
-    questionInput: one(questionInputs, {
-      fields: [scriptRunDependency.questionInputId],
-      references: [questionInputs.id],
-      relationName: "questionInputOnScriptRunDependency",
-    }),
-    previousRun: one(pipelineScriptRun, {
-      fields: [scriptRunDependency.previousRunId],
-      references: [pipelineScriptRun.id],
-      relationName: "previousRunOnScriptRunDependency",
     }),
   })
 );
