@@ -35,16 +35,16 @@ export const users = pgTable(
       .notNull(),
   },
   (table) => ({
-    usernameIndex: uniqueIndex("usernameIndex").on(table.username),
+    usernameIndex: uniqueIndex("username_index").on(table.username),
   })
 );
 
 export const usersRelations = relations(users, ({ many }) => ({
   providers: many(providers, {
-    relationName: "userOnProvider",
+    relationName: "user_on_provider",
   }),
   teamMemberships: many(teamMembers, {
-    relationName: "userOnTeamMember",
+    relationName: "user_on_team_member",
   }),
 }));
 
@@ -64,17 +64,17 @@ export const providers = pgTable(
     /** The oAuth Provider to sign in with */
     provider: providerEnum("provider").notNull(),
     /** The remote account id */
-    providerId: varchar("providerId").notNull(),
+    providerId: varchar("provider_id").notNull(),
     /** The Id of the connected user */
-    userId: uuid("userId")
+    userId: uuid("user_id")
       .notNull()
       .references(() => users.id),
     /** The access token for the provider */
-    accessToken: text("accessToken"),
+    accessToken: text("access_token"),
     /** The refresh token for the provider */
-    refreshToken: text("refreshToken"),
+    refreshToken: text("refresh_token"),
     /** The access token expires at */
-    accessTokenExpires: text("accessTokenExpires"),
+    accessTokenExpires: text("access_token_expires"),
     /** Password (argon2) */
     password: text("password"),
   },
@@ -87,6 +87,6 @@ export const providersRelations = relations(providers, ({ one }) => ({
   user: one(users, {
     fields: [providers.userId],
     references: [users.id],
-    relationName: "userOnProvider",
+    relationName: "user_on_provider",
   }),
 }));

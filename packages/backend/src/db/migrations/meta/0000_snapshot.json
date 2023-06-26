@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "e1964d18-7aa1-42ba-abcf-ffe2222a0615",
+  "id": "fed44619-aff3-4e47-9223-ecdbe40b65d8",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "providers": {
@@ -14,32 +14,32 @@
           "primaryKey": false,
           "notNull": true
         },
-        "providerId": {
-          "name": "providerId",
+        "provider_id": {
+          "name": "provider_id",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
-        "userId": {
-          "name": "userId",
+        "user_id": {
+          "name": "user_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "accessToken": {
-          "name": "accessToken",
+        "access_token": {
+          "name": "access_token",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "refreshToken": {
-          "name": "refreshToken",
+        "refresh_token": {
+          "name": "refresh_token",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "accessTokenExpires": {
-          "name": "accessTokenExpires",
+        "access_token_expires": {
+          "name": "access_token_expires",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -53,12 +53,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "providers_userId_users_id_fk": {
-          "name": "providers_userId_users_id_fk",
+        "providers_user_id_users_id_fk": {
+          "name": "providers_user_id_users_id_fk",
           "tableFrom": "providers",
           "tableTo": "users",
           "columnsFrom": [
-            "userId"
+            "user_id"
           ],
           "columnsTo": [
             "id"
@@ -68,10 +68,10 @@
         }
       },
       "compositePrimaryKeys": {
-        "providers_userId_provider": {
-          "name": "providers_userId_provider",
+        "providers_user_id_provider": {
+          "name": "providers_user_id_provider",
           "columns": [
-            "userId",
+            "user_id",
             "provider"
           ]
         }
@@ -103,8 +103,8 @@
         }
       },
       "indexes": {
-        "usernameIndex": {
-          "name": "usernameIndex",
+        "username_index": {
+          "name": "username_index",
           "columns": [
             "username"
           ],
@@ -136,8 +136,8 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {}
     },
-    "questionInputs": {
-      "name": "questionInputs",
+    "question_test_cases": {
+      "name": "question_test_cases",
       "schema": "",
       "columns": {
         "id": {
@@ -147,8 +147,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "questionId": {
-          "name": "questionId",
+        "question_version_id": {
+          "name": "question_version_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -159,14 +159,21 @@
           "primaryKey": false,
           "notNull": true
         },
-        "displayName": {
-          "name": "displayName",
+        "display_name": {
+          "name": "display_name",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
-        "file": {
-          "name": "file",
+        "hidden": {
+          "name": "hidden",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "file_id": {
+          "name": "file_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -174,12 +181,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "questionInputs_questionId_questions_id_fk": {
-          "name": "questionInputs_questionId_questions_id_fk",
-          "tableFrom": "questionInputs",
-          "tableTo": "questions",
+        "question_test_cases_question_version_id_question_versions_id_fk": {
+          "name": "question_test_cases_question_version_id_question_versions_id_fk",
+          "tableFrom": "question_test_cases",
+          "tableTo": "question_versions",
           "columnsFrom": [
-            "questionId"
+            "question_version_id"
           ],
           "columnsTo": [
             "id"
@@ -187,12 +194,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "questionInputs_file_files_id_fk": {
-          "name": "questionInputs_file_files_id_fk",
-          "tableFrom": "questionInputs",
+        "question_test_cases_file_id_files_id_fk": {
+          "name": "question_test_cases_file_id_files_id_fk",
+          "tableFrom": "question_test_cases",
           "tableTo": "files",
           "columnsFrom": [
-            "file"
+            "file_id"
           ],
           "columnsTo": [
             "id"
@@ -203,8 +210,8 @@
       },
       "compositePrimaryKeys": {}
     },
-    "questionVersions": {
-      "name": "questionVersions",
+    "question_versions": {
+      "name": "question_versions",
       "schema": "",
       "columns": {
         "id": {
@@ -214,14 +221,14 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "questionId": {
-          "name": "questionId",
+        "question_id": {
+          "name": "question_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "pipelineConfig": {
-          "name": "pipelineConfig",
+        "pipeline_config": {
+          "name": "pipeline_config",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
@@ -229,12 +236,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "questionVersions_questionId_questions_id_fk": {
-          "name": "questionVersions_questionId_questions_id_fk",
-          "tableFrom": "questionVersions",
+        "question_versions_question_id_questions_id_fk": {
+          "name": "question_versions_question_id_questions_id_fk",
+          "tableFrom": "question_versions",
           "tableTo": "questions",
           "columnsFrom": [
-            "questionId"
+            "question_id"
           ],
           "columnsTo": [
             "id"
@@ -256,8 +263,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "competitionId": {
-          "name": "competitionId",
+        "competition_id": {
+          "name": "competition_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -268,8 +275,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "displayName": {
-          "name": "displayName",
+        "display_name": {
+          "name": "display_name",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
@@ -283,12 +290,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "questions_competitionId_competitions_id_fk": {
-          "name": "questions_competitionId_competitions_id_fk",
+        "questions_competition_id_competitions_id_fk": {
+          "name": "questions_competition_id_competitions_id_fk",
           "tableFrom": "questions",
           "tableTo": "competitions",
           "columnsFrom": [
-            "competitionId"
+            "competition_id"
           ],
           "columnsTo": [
             "id"
@@ -299,8 +306,8 @@
       },
       "compositePrimaryKeys": {}
     },
-    "submissionResults": {
-      "name": "submissionResults",
+    "submission_results": {
+      "name": "submission_results",
       "schema": "",
       "columns": {
         "id": {
@@ -310,14 +317,14 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "submissionId": {
-          "name": "submissionId",
+        "submission_id": {
+          "name": "submission_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "questionVersionId": {
-          "name": "questionVersionId",
+        "question_version_id": {
+          "name": "question_version_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -332,12 +339,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "submissionResults_submissionId_submissions_id_fk": {
-          "name": "submissionResults_submissionId_submissions_id_fk",
-          "tableFrom": "submissionResults",
+        "submission_results_submission_id_submissions_id_fk": {
+          "name": "submission_results_submission_id_submissions_id_fk",
+          "tableFrom": "submission_results",
           "tableTo": "submissions",
           "columnsFrom": [
-            "submissionId"
+            "submission_id"
           ],
           "columnsTo": [
             "id"
@@ -345,12 +352,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "submissionResults_questionVersionId_questionVersions_id_fk": {
-          "name": "submissionResults_questionVersionId_questionVersions_id_fk",
-          "tableFrom": "submissionResults",
-          "tableTo": "questionVersions",
+        "submission_results_question_version_id_question_versions_id_fk": {
+          "name": "submission_results_question_version_id_question_versions_id_fk",
+          "tableFrom": "submission_results",
+          "tableTo": "question_versions",
           "columnsFrom": [
-            "questionVersionId"
+            "question_version_id"
           ],
           "columnsTo": [
             "id"
@@ -372,14 +379,14 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "questionId": {
-          "name": "questionId",
+        "question_id": {
+          "name": "question_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "teamId": {
-          "name": "teamId",
+        "team_id": {
+          "name": "team_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -400,12 +407,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "submissions_questionId_questions_id_fk": {
-          "name": "submissions_questionId_questions_id_fk",
+        "submissions_question_id_questions_id_fk": {
+          "name": "submissions_question_id_questions_id_fk",
           "tableFrom": "submissions",
           "tableTo": "questions",
           "columnsFrom": [
-            "questionId"
+            "question_id"
           ],
           "columnsTo": [
             "id"
@@ -413,12 +420,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "submissions_teamId_teams_id_fk": {
-          "name": "submissions_teamId_teams_id_fk",
+        "submissions_team_id_teams_id_fk": {
+          "name": "submissions_team_id_teams_id_fk",
           "tableFrom": "submissions",
           "tableTo": "teams",
           "columnsFrom": [
-            "teamId"
+            "team_id"
           ],
           "columnsTo": [
             "id"
@@ -426,15 +433,15 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "submissions_file_executableFiles_fileId_fk": {
-          "name": "submissions_file_executableFiles_fileId_fk",
+        "submissions_file_executable_files_file_id_fk": {
+          "name": "submissions_file_executable_files_file_id_fk",
           "tableFrom": "submissions",
-          "tableTo": "executableFiles",
+          "tableTo": "executable_files",
           "columnsFrom": [
             "file"
           ],
           "columnsTo": [
-            "fileId"
+            "file_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -446,14 +453,14 @@
       "name": "teamMembers",
       "schema": "",
       "columns": {
-        "teamId": {
-          "name": "teamId",
+        "team_id": {
+          "name": "team_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "userId": {
-          "name": "userId",
+        "user_id": {
+          "name": "user_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -461,12 +468,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "teamMembers_teamId_teams_id_fk": {
-          "name": "teamMembers_teamId_teams_id_fk",
+        "teamMembers_team_id_teams_id_fk": {
+          "name": "teamMembers_team_id_teams_id_fk",
           "tableFrom": "teamMembers",
           "tableTo": "teams",
           "columnsFrom": [
-            "teamId"
+            "team_id"
           ],
           "columnsTo": [
             "id"
@@ -474,12 +481,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "teamMembers_userId_users_id_fk": {
-          "name": "teamMembers_userId_users_id_fk",
+        "teamMembers_user_id_users_id_fk": {
+          "name": "teamMembers_user_id_users_id_fk",
           "tableFrom": "teamMembers",
           "tableTo": "users",
           "columnsFrom": [
-            "userId"
+            "user_id"
           ],
           "columnsTo": [
             "id"
@@ -489,11 +496,11 @@
         }
       },
       "compositePrimaryKeys": {
-        "teamMembers_teamId_userId": {
-          "name": "teamMembers_teamId_userId",
+        "teamMembers_team_id_user_id": {
+          "name": "teamMembers_team_id_user_id",
           "columns": [
-            "teamId",
-            "userId"
+            "team_id",
+            "user_id"
           ]
         }
       }
@@ -515,14 +522,14 @@
           "primaryKey": false,
           "notNull": true
         },
-        "displayName": {
-          "name": "displayName",
+        "display_name": {
+          "name": "display_name",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
-        "competitionId": {
-          "name": "competitionId",
+        "competition_id": {
+          "name": "competition_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -532,19 +539,19 @@
         "competition_team": {
           "name": "competition_team",
           "columns": [
-            "competitionId",
+            "competition_id",
             "name"
           ],
           "isUnique": true
         }
       },
       "foreignKeys": {
-        "teams_competitionId_competitions_id_fk": {
-          "name": "teams_competitionId_competitions_id_fk",
+        "teams_competition_id_competitions_id_fk": {
+          "name": "teams_competition_id_competitions_id_fk",
           "tableFrom": "teams",
           "tableTo": "competitions",
           "columnsFrom": [
-            "competitionId"
+            "competition_id"
           ],
           "columnsTo": [
             "id"
@@ -555,14 +562,21 @@
       },
       "compositePrimaryKeys": {}
     },
-    "executableFiles": {
-      "name": "executableFiles",
+    "executable_files": {
+      "name": "executable_files",
       "schema": "",
       "columns": {
-        "fileId": {
-          "name": "fileId",
+        "id": {
+          "name": "id",
           "type": "uuid",
           "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "file_id": {
+          "name": "file_id",
+          "type": "uuid",
+          "primaryKey": false,
           "notNull": true
         },
         "runtime": {
@@ -574,12 +588,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "executableFiles_fileId_files_id_fk": {
-          "name": "executableFiles_fileId_files_id_fk",
-          "tableFrom": "executableFiles",
+        "executable_files_file_id_files_id_fk": {
+          "name": "executable_files_file_id_files_id_fk",
+          "tableFrom": "executable_files",
           "tableTo": "files",
           "columnsFrom": [
-            "fileId"
+            "file_id"
           ],
           "columnsTo": [
             "id"
@@ -631,8 +645,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "questionId": {
-          "name": "questionId",
+        "question_id": {
+          "name": "question_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -640,12 +654,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "files_questionId_questions_id_fk": {
-          "name": "files_questionId_questions_id_fk",
+        "files_question_id_questions_id_fk": {
+          "name": "files_question_id_questions_id_fk",
           "tableFrom": "files",
           "tableTo": "questions",
           "columnsFrom": [
-            "questionId"
+            "question_id"
           ],
           "columnsTo": [
             "id"
@@ -656,8 +670,8 @@
       },
       "compositePrimaryKeys": {}
     },
-    "pipelineScriptRun": {
-      "name": "pipelineScriptRun",
+    "pipelineScriptRuns": {
+      "name": "pipelineScriptRuns",
       "schema": "",
       "columns": {
         "id": {
@@ -667,39 +681,45 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "compositeId": {
-          "name": "compositeId",
+        "composite_id": {
+          "name": "composite_id",
           "type": "json",
           "primaryKey": true,
           "notNull": true
         },
-        "runStatus": {
-          "name": "runStatus",
+        "run_status": {
+          "name": "run_status",
           "type": "script_run_status",
           "primaryKey": false,
           "notNull": true,
           "default": "'Queued'"
         },
-        "outputFile": {
-          "name": "outputFile",
+        "error_kind": {
+          "name": "error_kind",
+          "type": "script_run_error_kind",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "output_file": {
+          "name": "output_file",
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
-        "questionId": {
-          "name": "questionId",
+        "question_id": {
+          "name": "question_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "submissionResultId": {
-          "name": "submissionResultId",
+        "submission_result_id": {
+          "name": "submission_result_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
-        "pipelineScriptId": {
-          "name": "pipelineScriptId",
+        "executable_id": {
+          "name": "executable_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -709,18 +729,18 @@
         "composite_id_index": {
           "name": "composite_id_index",
           "columns": [
-            "compositeId"
+            "composite_id"
           ],
           "isUnique": true
         }
       },
       "foreignKeys": {
-        "pipelineScriptRun_outputFile_files_id_fk": {
-          "name": "pipelineScriptRun_outputFile_files_id_fk",
-          "tableFrom": "pipelineScriptRun",
+        "pipelineScriptRuns_output_file_files_id_fk": {
+          "name": "pipelineScriptRuns_output_file_files_id_fk",
+          "tableFrom": "pipelineScriptRuns",
           "tableTo": "files",
           "columnsFrom": [
-            "outputFile"
+            "output_file"
           ],
           "columnsTo": [
             "id"
@@ -728,12 +748,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "pipelineScriptRun_questionId_questions_id_fk": {
-          "name": "pipelineScriptRun_questionId_questions_id_fk",
-          "tableFrom": "pipelineScriptRun",
+        "pipelineScriptRuns_question_id_questions_id_fk": {
+          "name": "pipelineScriptRuns_question_id_questions_id_fk",
+          "tableFrom": "pipelineScriptRuns",
           "tableTo": "questions",
           "columnsFrom": [
-            "questionId"
+            "question_id"
           ],
           "columnsTo": [
             "id"
@@ -741,12 +761,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "pipelineScriptRun_submissionResultId_submissionResults_id_fk": {
-          "name": "pipelineScriptRun_submissionResultId_submissionResults_id_fk",
-          "tableFrom": "pipelineScriptRun",
-          "tableTo": "submissionResults",
+        "pipelineScriptRuns_submission_result_id_submission_results_id_fk": {
+          "name": "pipelineScriptRuns_submission_result_id_submission_results_id_fk",
+          "tableFrom": "pipelineScriptRuns",
+          "tableTo": "submission_results",
           "columnsFrom": [
-            "submissionResultId"
+            "submission_result_id"
           ],
           "columnsTo": [
             "id"
@@ -754,15 +774,15 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "pipelineScriptRun_pipelineScriptId_pipelineScripts_executableFileId_fk": {
-          "name": "pipelineScriptRun_pipelineScriptId_pipelineScripts_executableFileId_fk",
-          "tableFrom": "pipelineScriptRun",
-          "tableTo": "pipelineScripts",
+        "pipelineScriptRuns_executable_id_executable_files_id_fk": {
+          "name": "pipelineScriptRuns_executable_id_executable_files_id_fk",
+          "tableFrom": "pipelineScriptRuns",
+          "tableTo": "executable_files",
           "columnsFrom": [
-            "pipelineScriptId"
+            "executable_id"
           ],
           "columnsTo": [
-            "executableFileId"
+            "id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -770,8 +790,8 @@
       },
       "compositePrimaryKeys": {}
     },
-    "pipelineScripts": {
-      "name": "pipelineScripts",
+    "pipeline_scripts": {
+      "name": "pipeline_scripts",
       "schema": "",
       "columns": {
         "id": {
@@ -787,14 +807,14 @@
           "primaryKey": false,
           "notNull": true
         },
-        "executableFileId": {
-          "name": "executableFileId",
+        "executable_file_id": {
+          "name": "executable_file_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "questionVersionId": {
-          "name": "questionVersionId",
+        "question_version_id": {
+          "name": "question_version_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -802,25 +822,25 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "pipelineScripts_executableFileId_executableFiles_fileId_fk": {
-          "name": "pipelineScripts_executableFileId_executableFiles_fileId_fk",
-          "tableFrom": "pipelineScripts",
-          "tableTo": "executableFiles",
+        "pipeline_scripts_executable_file_id_executable_files_id_fk": {
+          "name": "pipeline_scripts_executable_file_id_executable_files_id_fk",
+          "tableFrom": "pipeline_scripts",
+          "tableTo": "executable_files",
           "columnsFrom": [
-            "executableFileId"
+            "executable_file_id"
           ],
           "columnsTo": [
-            "fileId"
+            "id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "pipelineScripts_questionVersionId_questionVersions_id_fk": {
-          "name": "pipelineScripts_questionVersionId_questionVersions_id_fk",
-          "tableFrom": "pipelineScripts",
-          "tableTo": "questionVersions",
+        "pipeline_scripts_question_version_id_question_versions_id_fk": {
+          "name": "pipeline_scripts_question_version_id_question_versions_id_fk",
+          "tableFrom": "pipeline_scripts",
+          "tableTo": "question_versions",
           "columnsFrom": [
-            "questionVersionId"
+            "question_version_id"
           ],
           "columnsTo": [
             "id"
@@ -835,14 +855,14 @@
       "name": "scriptRunDependency",
       "schema": "",
       "columns": {
-        "runId": {
-          "name": "runId",
+        "run_id": {
+          "name": "run_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "previousRunId": {
-          "name": "previousRunId",
+        "previous_run_id": {
+          "name": "previous_run_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -850,12 +870,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "scriptRunDependency_runId_pipelineScriptRun_id_fk": {
-          "name": "scriptRunDependency_runId_pipelineScriptRun_id_fk",
+        "scriptRunDependency_run_id_pipelineScriptRuns_id_fk": {
+          "name": "scriptRunDependency_run_id_pipelineScriptRuns_id_fk",
           "tableFrom": "scriptRunDependency",
-          "tableTo": "pipelineScriptRun",
+          "tableTo": "pipelineScriptRuns",
           "columnsFrom": [
-            "runId"
+            "run_id"
           ],
           "columnsTo": [
             "id"
@@ -863,12 +883,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "scriptRunDependency_previousRunId_pipelineScriptRun_id_fk": {
-          "name": "scriptRunDependency_previousRunId_pipelineScriptRun_id_fk",
+        "scriptRunDependency_previous_run_id_pipelineScriptRuns_id_fk": {
+          "name": "scriptRunDependency_previous_run_id_pipelineScriptRuns_id_fk",
           "tableFrom": "scriptRunDependency",
-          "tableTo": "pipelineScriptRun",
+          "tableTo": "pipelineScriptRuns",
           "columnsFrom": [
-            "previousRunId"
+            "previous_run_id"
           ],
           "columnsTo": [
             "id"
@@ -878,11 +898,11 @@
         }
       },
       "compositePrimaryKeys": {
-        "scriptRunDependency_runId_previousRunId": {
-          "name": "scriptRunDependency_runId_previousRunId",
+        "scriptRunDependency_run_id_previous_run_id": {
+          "name": "scriptRunDependency_run_id_previous_run_id",
           "columns": [
-            "runId",
-            "previousRunId"
+            "run_id",
+            "previous_run_id"
           ]
         }
       }
@@ -916,14 +936,24 @@
         "Passed": "Passed"
       }
     },
+    "script_run_error_kind": {
+      "name": "script_run_error_kind",
+      "values": {
+        "CompileError": "CompileError",
+        "RuntimeError": "RuntimeError",
+        "TimeoutError": "TimeoutError",
+        "ParsingOutputError": "ParsingOutputError",
+        "FailedToInstallLanguageError": "FailedToInstallLanguageError",
+        "DependentScriptError": "DependentScriptError"
+      }
+    },
     "script_run_status": {
       "name": "script_run_status",
       "values": {
         "Queued": "Queued",
         "Executing": "Executing",
         "Success": "Success",
-        "Error": "Error",
-        "Timeout": "Timeout"
+        "Error": "Error"
       }
     }
   },
