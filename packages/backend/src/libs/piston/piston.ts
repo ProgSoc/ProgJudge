@@ -84,9 +84,9 @@ const PistonExecuteResultSchema = z.object({
 });
 
 /** The Piston error schema */
-const ErrorResultSchema = z.object(({
+const ErrorResultSchema = z.object({
   message: z.string(),
-}))
+});
 
 /** The Piston error type */
 type ErrorResult = z.infer<typeof ErrorResultSchema>;
@@ -121,7 +121,7 @@ export type PistonPackage = z.infer<typeof PistonPackageSchema>;
 
 const isErrorResult = (result: any | ErrorResult): result is ErrorResult => {
   return result.hasOwnProperty("message");
-}
+};
 
 /**
  * The Piston Client, for interacting with the Piston API.
@@ -182,10 +182,9 @@ export class PistonClient {
 
     const executionRaw = await executionRequest.json();
 
-    const execution = z.union([
-      PistonExecuteResultSchema,
-      ErrorResultSchema,
-    ]).parse(executionRaw);
+    const execution = z
+      .union([PistonExecuteResultSchema, ErrorResultSchema])
+      .parse(executionRaw);
 
     if (isErrorResult(execution)) {
       throw new Error(execution.message);
@@ -211,9 +210,7 @@ export class PistonClient {
    * @throws {Error} If the package could not be installed
    * @returns The package that was installed
    */
-  async installPackage(
-    rawParams: PistonPackage
-  ): Promise<PistonPackage> {
+  async installPackage(rawParams: PistonPackage): Promise<PistonPackage> {
     const { language, version } = PistonPackageSchema.parse(rawParams);
 
     const installRequest = await fetch(`${this.config.url}/api/v2/packages`, {
@@ -229,10 +226,9 @@ export class PistonClient {
 
     const installRaw = await installRequest.json();
 
-    const install = z.union([
-      PistonPackageSchema,
-      ErrorResultSchema,
-    ]).parse(installRaw);
+    const install = z
+      .union([PistonPackageSchema, ErrorResultSchema])
+      .parse(installRaw);
 
     if (isErrorResult(install)) {
       throw new Error(install.message);
@@ -247,9 +243,7 @@ export class PistonClient {
    * @throws {Error} If the package could not be uninstalled
    * @returns The package that was uninstalled
    */
-  async uninstallPackage(
-    rawParams: PistonPackage
-  ): Promise<PistonPackage> {
+  async uninstallPackage(rawParams: PistonPackage): Promise<PistonPackage> {
     const { language, version } = PistonPackageSchema.parse(rawParams);
 
     const uninstallRequest = await fetch(`${this.config.url}/api/v2/packages`, {
@@ -265,10 +259,9 @@ export class PistonClient {
 
     const uninstallRaw = await uninstallRequest.json();
 
-    const uninstall = z.union([
-      PistonPackageSchema,
-      ErrorResultSchema,
-    ]).parse(uninstallRaw);
+    const uninstall = z
+      .union([PistonPackageSchema, ErrorResultSchema])
+      .parse(uninstallRaw);
 
     if (isErrorResult(uninstall)) {
       throw new Error(uninstall.message);

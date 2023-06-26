@@ -25,12 +25,16 @@ function sha256(content: Buffer) {
   return createHash("sha256").update(content).digest("hex");
 }
 
+const testS3FilesDict: Record<string, Buffer> = {};
+
 async function saveFileToS3(ref: string, data: Buffer) {
-  throw new Error("Not implemented");
+  // throw new Error("Not implemented");
+  testS3FilesDict[ref] = data;
 }
 
 async function getFileFromS3(ref: string): Promise<Buffer> {
-  throw new Error("Not implemented");
+  // throw new Error("Not implemented");
+  return testS3FilesDict[ref];
 }
 
 export async function getOrCreateFile(

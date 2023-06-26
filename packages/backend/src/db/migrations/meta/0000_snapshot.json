@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "fed44619-aff3-4e47-9223-ecdbe40b65d8",
+  "id": "ecfec93f-e43c-49da-a26b-6b701caa2ade",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "providers": {
@@ -398,8 +398,8 @@
           "notNull": false,
           "default": "'Pending'"
         },
-        "file": {
-          "name": "file",
+        "file_id": {
+          "name": "file_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -433,15 +433,15 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "submissions_file_executable_files_file_id_fk": {
-          "name": "submissions_file_executable_files_file_id_fk",
+        "submissions_file_id_executable_files_id_fk": {
+          "name": "submissions_file_id_executable_files_id_fk",
           "tableFrom": "submissions",
           "tableTo": "executable_files",
           "columnsFrom": [
-            "file"
+            "file_id"
           ],
           "columnsTo": [
-            "file_id"
+            "id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -449,8 +449,8 @@
       },
       "compositePrimaryKeys": {}
     },
-    "teamMembers": {
-      "name": "teamMembers",
+    "team_members": {
+      "name": "team_members",
       "schema": "",
       "columns": {
         "team_id": {
@@ -468,9 +468,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "teamMembers_team_id_teams_id_fk": {
-          "name": "teamMembers_team_id_teams_id_fk",
-          "tableFrom": "teamMembers",
+        "team_members_team_id_teams_id_fk": {
+          "name": "team_members_team_id_teams_id_fk",
+          "tableFrom": "team_members",
           "tableTo": "teams",
           "columnsFrom": [
             "team_id"
@@ -481,9 +481,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "teamMembers_user_id_users_id_fk": {
-          "name": "teamMembers_user_id_users_id_fk",
-          "tableFrom": "teamMembers",
+        "team_members_user_id_users_id_fk": {
+          "name": "team_members_user_id_users_id_fk",
+          "tableFrom": "team_members",
           "tableTo": "users",
           "columnsFrom": [
             "user_id"
@@ -496,8 +496,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "teamMembers_team_id_user_id": {
-          "name": "teamMembers_team_id_user_id",
+        "team_members_team_id_user_id": {
+          "name": "team_members_team_id_user_id",
           "columns": [
             "team_id",
             "user_id"
@@ -670,8 +670,8 @@
       },
       "compositePrimaryKeys": {}
     },
-    "pipelineScriptRuns": {
-      "name": "pipelineScriptRuns",
+    "pipeline_script_runs": {
+      "name": "pipeline_script_runs",
       "schema": "",
       "columns": {
         "id": {
@@ -683,8 +683,8 @@
         },
         "composite_id": {
           "name": "composite_id",
-          "type": "json",
-          "primaryKey": true,
+          "type": "varchar",
+          "primaryKey": false,
           "notNull": true
         },
         "run_status": {
@@ -735,9 +735,9 @@
         }
       },
       "foreignKeys": {
-        "pipelineScriptRuns_output_file_files_id_fk": {
-          "name": "pipelineScriptRuns_output_file_files_id_fk",
-          "tableFrom": "pipelineScriptRuns",
+        "pipeline_script_runs_output_file_files_id_fk": {
+          "name": "pipeline_script_runs_output_file_files_id_fk",
+          "tableFrom": "pipeline_script_runs",
           "tableTo": "files",
           "columnsFrom": [
             "output_file"
@@ -748,9 +748,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "pipelineScriptRuns_question_id_questions_id_fk": {
-          "name": "pipelineScriptRuns_question_id_questions_id_fk",
-          "tableFrom": "pipelineScriptRuns",
+        "pipeline_script_runs_question_id_questions_id_fk": {
+          "name": "pipeline_script_runs_question_id_questions_id_fk",
+          "tableFrom": "pipeline_script_runs",
           "tableTo": "questions",
           "columnsFrom": [
             "question_id"
@@ -761,9 +761,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "pipelineScriptRuns_submission_result_id_submission_results_id_fk": {
-          "name": "pipelineScriptRuns_submission_result_id_submission_results_id_fk",
-          "tableFrom": "pipelineScriptRuns",
+        "pipeline_script_runs_submission_result_id_submission_results_id_fk": {
+          "name": "pipeline_script_runs_submission_result_id_submission_results_id_fk",
+          "tableFrom": "pipeline_script_runs",
           "tableTo": "submission_results",
           "columnsFrom": [
             "submission_result_id"
@@ -774,9 +774,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "pipelineScriptRuns_executable_id_executable_files_id_fk": {
-          "name": "pipelineScriptRuns_executable_id_executable_files_id_fk",
-          "tableFrom": "pipelineScriptRuns",
+        "pipeline_script_runs_executable_id_executable_files_id_fk": {
+          "name": "pipeline_script_runs_executable_id_executable_files_id_fk",
+          "tableFrom": "pipeline_script_runs",
           "tableTo": "executable_files",
           "columnsFrom": [
             "executable_id"
@@ -851,8 +851,8 @@
       },
       "compositePrimaryKeys": {}
     },
-    "scriptRunDependency": {
-      "name": "scriptRunDependency",
+    "script_run_dependency": {
+      "name": "script_run_dependency",
       "schema": "",
       "columns": {
         "run_id": {
@@ -870,10 +870,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "scriptRunDependency_run_id_pipelineScriptRuns_id_fk": {
-          "name": "scriptRunDependency_run_id_pipelineScriptRuns_id_fk",
-          "tableFrom": "scriptRunDependency",
-          "tableTo": "pipelineScriptRuns",
+        "script_run_dependency_run_id_pipeline_script_runs_id_fk": {
+          "name": "script_run_dependency_run_id_pipeline_script_runs_id_fk",
+          "tableFrom": "script_run_dependency",
+          "tableTo": "pipeline_script_runs",
           "columnsFrom": [
             "run_id"
           ],
@@ -883,10 +883,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "scriptRunDependency_previous_run_id_pipelineScriptRuns_id_fk": {
-          "name": "scriptRunDependency_previous_run_id_pipelineScriptRuns_id_fk",
-          "tableFrom": "scriptRunDependency",
-          "tableTo": "pipelineScriptRuns",
+        "script_run_dependency_previous_run_id_pipeline_script_runs_id_fk": {
+          "name": "script_run_dependency_previous_run_id_pipeline_script_runs_id_fk",
+          "tableFrom": "script_run_dependency",
+          "tableTo": "pipeline_script_runs",
           "columnsFrom": [
             "previous_run_id"
           ],
@@ -898,8 +898,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "scriptRunDependency_run_id_previous_run_id": {
-          "name": "scriptRunDependency_run_id_previous_run_id",
+        "script_run_dependency_run_id_previous_run_id": {
+          "name": "script_run_dependency_run_id_previous_run_id",
           "columns": [
             "run_id",
             "previous_run_id"

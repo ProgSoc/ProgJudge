@@ -1,180 +1,248 @@
-import migrate from "./db/migrate";
-import env from "./env";
-import logger from "./logger";
-import * as express from "express";
-import * as trpcExpress from "@trpc/server/adapters/express";
-import router from "./router";
-import { createContext } from "./trpc";
-import helmet from "helmet";
-import cookieParser from "cookie-parser";
-import { createClient } from "redis";
-import RedisStore from "connect-redis";
-import session from "express-session";
-import passport from "passport";
-import githubStrategy from "./strategies/GithubStrategy";
 import db from "./db/db";
-import pistonClient from "./libs/piston/client";
-import discordStrategy from "./strategies/DiscordStrategy";
-import googleStrategy from "./strategies/GoogleStrategy";
+import migrate from "./db/migrate";
+import { competitions, questions, teams } from "./db/schema";
+import env from "./env";
+import { ExecutionLoop } from "./pipelines/execution";
+import {
+  PipelineScriptInputDestKind,
+  PipelineScriptInputSourceKind,
+  PipelineScriptKind,
+} from "./pipelines/pipelineConfig";
+import { createQuestionVersion } from "./pipelines/questions";
 
-const bootstrapLogger = logger.scope("Bootstrap");
-
-async function bootstrap() {
+async function run() {
   await migrate(env.SECRET_DB_URL);
 
-  const app = express.default();
+  ExecutionLoop.spawn();
 
-  app.use(helmet());
-  app.use(cookieParser(env.COOKIE_SECRET));
-
-  const redisClient = createClient({
-    url: env.REDIS_SESSION_URL,
-  });
-
-  redisClient.on("error", function (error) {
-    bootstrapLogger.error(error);
-  });
-
-  await redisClient.connect();
-  bootstrapLogger.success("Connected to Redis");
-
-  const redisStore = new RedisStore({
-    client: redisClient,
-  });
-
-  app.use(
-    session({
-      secret: env.SESSION_SECRET,
-      resave: false,
-      saveUninitialized: false,
-      store: redisStore,
+  const comps = await db
+    .insert(competitions)
+    .values({
+      name: "Test Competition",
     })
-  );
+    .returning();
+  const comp = comps[0];
 
-  app.use(passport.initialize());
-  app.use(passport.session());
+  const qs = await db
+    .insert(questions)
+    .values({
+      name: "Test Question",
+      displayName: "Test Question",
+      competitionId: comp.id,
+      description: "Test Question",
+    })
+    .returning();
+  const question = qs[0];
 
-  if (
-    env.GITHUB_CALLBACK_URL &&
-    env.GITHUB_CLIENT_ID &&
-    env.GITHUB_CLIENT_SECRET
-  ) {
-    passport.use(
-      githubStrategy(
-        env.GITHUB_CLIENT_ID,
-        env.GITHUB_CLIENT_SECRET,
-        env.GITHUB_CALLBACK_URL
-      )
-    );
+  await createQuestionVersion(
+    {
+      testCases: [
+        {
+          name: "test",
+          displayName: "Test Case",
+          file: {
+            data: Buffer.from("foo bar\n"),
+            filename: "test.txt",
+            mime: "text/plain",
+          },
+          hidden: false,
+        },
+      ],
+      pipeline: {
+        outputNode: "last",
+        nodes: {
+          echo: {
+            inputs: [
+              {
+                source: { kind: PipelineScriptInputSourceKind.TestCase },
+                destination: { kind: PipelineScriptInputDestKind.Stdin },
+              },
+            ],
+            output: "utf8",
+            script: {
+              kind: PipelineScriptKind.Script,
+              scriptName: "echo",
+            },
+          },
+          echo2: {
+            inputs: [
+              {
+                source: { kind: PipelineScriptInputSourceKind.TestCase },
+                // source: {
+                //   kind: PipelineScriptInputSourceKind.Stdout,
+                //   sourceScriptName: "echo",
+                // },
+                destination: { kind: PipelineScriptInputDestKind.Stdin },
+              },
+            ],
+            output: "utf8",
+            script: {
+              kind: PipelineScriptKind.Script,
+              scriptName: "echo2",
+            },
+          },
+          echo3: {
+            inputs: [
+              {
+                source: {
+                  kind: PipelineScriptInputSourceKind.Stdout,
+                  sourceScriptName: "echo",
+                },
+                destination: { kind: PipelineScriptInputDestKind.Stdin },
+              },
+              {
+                source: {
+                  kind: PipelineScriptInputSourceKind.Stdout,
+                  sourceScriptName: "echo2",
+                },
+                destination: {
+                  kind: PipelineScriptInputDestKind.File,
+                  path: "test.txt",
+                },
+              },
+            ],
+            output: "utf8",
+            script: {
+              kind: PipelineScriptKind.Script,
+              scriptName: "echo3",
+            },
+          },
+        },
+        scripts: {
+          echo2: {
+            runtime: "rust:1.68.2",
+            data: Buffer.from(`
+use std::io::{self, Read};
 
-    app.get("/auth/github", passport.authenticate("github"));
-
-    app.get(
-      "/auth/github/callback",
-      passport.authenticate("github", {
-        failureRedirect: env.FRONTEND_URL + "/login",
-        successRedirect: env.FRONTEND_URL,
-      })
-    );
-
-    bootstrapLogger.success("Github auth enabled");
-  }
-
-  if (
-    env.DISCORD_CALLBACK_URL &&
-    env.DISCORD_CLIENT_ID &&
-    env.DISCORD_CLIENT_SECRET
-  ) {
-    passport.use(
-      discordStrategy(
-        env.DISCORD_CLIENT_ID,
-        env.DISCORD_CLIENT_SECRET,
-        env.DISCORD_CALLBACK_URL
-      )
-    );
-
-    app.get("/auth/discord", passport.authenticate("discord"));
-
-    app.get(
-      "/auth/discord/callback",
-      passport.authenticate("discord", {
-        failureRedirect: env.FRONTEND_URL + "/login",
-        successRedirect: env.FRONTEND_URL,
-      })
-    );
-
-    bootstrapLogger.success("Discord auth enabled");
-  }
-
-  if (
-    env.GOOGLE_CALLBACK_URL &&
-    env.GOOGLE_CLIENT_ID &&
-    env.GOOGLE_CLIENT_SECRET
-  ) {
-    passport.use(
-      googleStrategy(
-        env.GOOGLE_CLIENT_ID,
-        env.GOOGLE_CLIENT_SECRET,
-        env.GOOGLE_CALLBACK_URL
-      )
-    );
-
-    app.get(
-      "/auth/google",
-      passport.authenticate("google", { scope: ["profile"] })
-    );
-
-    app.get(
-      "/auth/google/callback",
-      passport.authenticate("google", {
-        failureRedirect: env.FRONTEND_URL + "/login",
-        successRedirect: env.FRONTEND_URL,
-      })
-    );
-
-    bootstrapLogger.success("Google auth enabled");
-  }
-
-  passport.serializeUser(function (user, done) {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(async function (id: string, done) {
-    const user = await db.query.users.findFirst({
-      where: (users, { eq }) => eq(users.id, id),
-    });
-    done(null, user);
-  });
-
-  app.use(
-    "/trpc",
-    trpcExpress.createExpressMiddleware({ createContext, router })
-  );
-
-  // try {
-  //   await pistonClient.installPackage({
-  //     language: "python",
-  //     version: "3.10.0",
-  //   })
-  // } catch (error) {
-  //   console.log(error)
-  // }
-
-  // const execRes = await pistonClient.execute({
-  //   language: "python",
-  //   version: "3.10.0",
-  //   files: [
-  //     {
-  //       content: "  print('Hello World')",
-  //       name: "main.py",
-  //     }
-  //   ]
-  // })
-
-  // console.log(execRes)
-
-  app.listen(env.PORT, () => {
-    bootstrapLogger.success(`Listening on port ${env.PORT}`);
-  });
+fn main() {
+    let mut buffer = String::new();
+    io::stdin().read_to_string(&mut buffer).unwrap();
+    print!("{} from rust", buffer.trim());
 }
-bootstrap();
+            `),
+            filename: "echo.rs",
+          },
+          echo: {
+            runtime: "dotnet/csharp:5.0.201",
+            data: Buffer.from(`
+using System;
+
+public class Program
+{
+    public static void Main()
+    {
+        string line = Console.ReadLine();
+        Console.WriteLine(line + " from csharp");
+    }
+}
+            `),
+            filename: "echo.cs",
+          },
+          echo3: {
+            runtime: "python:3.10.0",
+            data: Buffer.from(`
+data1 = input()
+data2 = open("test.txt").read()
+print("data from stdin: " + data1)
+print("data from test.txt: " + data2)
+            `),
+            filename: "echo.py",
+          },
+        },
+      },
+    },
+    question.id
+  );
+
+  console.log("done");
+
+  // const ts = await db
+  //   .insert(teams)
+  //   .values({
+  //     name: "Test Team",
+  //     displayName: "Test Team",
+  //     competitionId: comp.id,
+  //   })
+  //   .returning();
+  // const team = ts[0];
+}
+
+run();
+
+// {
+//   language: 'python',
+//   version: '3.10.0',
+//   run: {
+//     stdout: '',
+//     stderr: 'Traceback (most recent call last):\n' +
+//       '  File "/piston/jobs/4b08d3d5-17cc-41a5-bf09-62d0e1e051ab/echo.py", line 1, in <module>\n' +
+//       '    data = input()\n' +
+//       'EOFError: EOF when reading a line\n',
+//     code: 1,
+//     signal: null,
+//     output: 'Traceback (most recent call last):\n' +
+//       '  File "/piston/jobs/4b08d3d5-17cc-41a5-bf09-62d0e1e051ab/echo.py", line 1, in <module>\n' +
+//       '    data = input()\n' +
+//       'EOFError: EOF when reading a line\n'
+//   }
+// }
+
+// {
+//   language: 'python',
+//   version: '3.10.0',
+//   run: {
+//     stdout: 'foo bar\n',
+//     stderr: '',
+//     code: 0,
+//     signal: null,
+//     output: 'foo bar\n'
+//   }
+// }
+
+// {
+//   language: 'rust',
+//   version: '1.68.2',
+//   run: {
+//     stdout: 'foo bar\n',
+//     stderr: '',
+//     code: 0,
+//     signal: null,
+//     output: 'foo bar\n'
+//   },
+//   compile: { stdout: '', stderr: '', code: 0, signal: null, output: '' }
+// }
+
+// {
+//   language: 'rust',
+//   version: '1.68.2',
+//   run: {
+//     stdout: '',
+//     stderr: '/piston/packages/rust/1.68.2/run: line 4: ./binary: No such file or directory\n',
+//     code: 127,
+//     signal: null,
+//     output: '/piston/packages/rust/1.68.2/run: line 4: ./binary: No such file or directory\n'
+//   },
+//   compile: {
+//     stdout: '',
+//     stderr: 'error: expected one of `->`, `where`, or `{`, found `b`\n' +
+//       ' --> echo.rs:4:10\n' +
+//       '  |\n' +
+//       '4 | fn main()b {\n' +
+//       '  |          ^ expected one of `->`, `where`, or `{`\n' +
+//       '\n' +
+//       'error: aborting due to previous error\n' +
+//       '\n' +
+//       "chmod: cannot access 'binary': No such file or directory\n",
+//     code: 1,
+//     signal: null,
+//     output: 'error: expected one of `->`, `where`, or `{`, found `b`\n' +
+//       ' --> echo.rs:4:10\n' +
+//       '  |\n' +
+//       '4 | fn main()b {\n' +
+//       '  |          ^ expected one of `->`, `where`, or `{`\n' +
+//       '\n' +
+//       'error: aborting due to previous error\n' +
+//       '\n' +
+//       "chmod: cannot access 'binary': No such file or directory\n"
+//   }
+// }

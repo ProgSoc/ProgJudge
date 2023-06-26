@@ -79,7 +79,7 @@ export const teamsRelations = relations(teams, ({ one, many }) => ({
  * Team members table
  */
 export const teamMembers = pgTable(
-  "teamMembers",
+  "team_members",
   {
     /** The team that the user belongs to */
     teamId: uuid("team_id")
@@ -236,9 +236,9 @@ export const submissions = pgTable("submissions", {
   /** The status of judging */
   status: submissionsResultStatusEnum("status").default(sql`'Pending'`),
   /** The executable file submitted */
-  file: uuid("file")
+  fileId: uuid("file_id")
     .notNull()
-    .references(() => executableFiles.fileId),
+    .references(() => executableFiles.id),
 });
 
 export const submissionsRelations = relations(submissions, ({ one, many }) => ({
@@ -256,8 +256,8 @@ export const submissionsRelations = relations(submissions, ({ one, many }) => ({
     relationName: "result_on_submission",
   }),
   executableFile: one(executableFiles, {
-    fields: [submissions.file],
-    references: [executableFiles.fileId],
+    fields: [submissions.fileId],
+    references: [executableFiles.id],
     relationName: "file_on_submission",
   }),
 }));

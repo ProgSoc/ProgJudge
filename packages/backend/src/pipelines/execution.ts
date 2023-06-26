@@ -16,11 +16,18 @@ import {
   exists,
   WithEnum,
 } from "drizzle-orm";
-import { getExecutableById, getOrCreateFile } from "./files";
-import buffermime from "file-type";
+import { getExecutableById, getFileById, getOrCreateFile } from "./files";
+import { fileTypeFromBuffer } from "file-type";
 import pistonClient from "../libs/piston/client";
 import { PistonPackageResult } from "../libs/piston/piston";
 import AsyncLock from "async-lock";
+import {
+  CompositeId,
+  compositeIdFromString,
+  compositeIdAsString,
+  getCompositeIdDependencies,
+} from "./composition";
+import { UnreachableError } from "../unreachableError";
 
 type ScriptRun = InferModel<typeof pipelineScriptRuns>;
 
@@ -28,9 +35,11 @@ type ScriptErrorKind = NonNullable<
   InferModel<typeof pipelineScriptRuns>["errorKind"]
 >;
 
+const runs = db.select().from(pipelineScriptRuns).as("run");
+
 const fetchNextQueuedRuns = db
   .select()
-  .from(pipelineScriptRuns)
+  .from(runs)
   .where((run) =>
     and(
       eq(run.runStatus, "Queued"),
@@ -44,8 +53,8 @@ const fetchNextQueuedRuns = db
           )
           .where((data) =>
             and(
-              eq(data.pipelineScriptRuns.id, run.id),
-              ne(data.pipelineScriptRuns.runStatus, "Success")
+              eq(data.script_run_dependency.runId, run.id),
+              ne(data.pipeline_script_runs.runStatus, "Success")
             )
           )
       )
@@ -53,9 +62,36 @@ const fetchNextQueuedRuns = db
   )
   .prepare("fetch_next_queued_runs");
 
+console.log(
+  db
+    .select()
+    .from(runs)
+    .where((run) =>
+      and(
+        eq(run.runStatus, "Queued"),
+        notExists(
+          db
+            .select()
+            .from(scriptRunDependencies)
+            .leftJoin(
+              pipelineScriptRuns,
+              eq(pipelineScriptRuns.id, scriptRunDependencies.previousRunId)
+            )
+            .where((data) =>
+              and(
+                eq(data.script_run_dependency.runId, run.id),
+                ne(data.pipeline_script_runs.runStatus, "Success")
+              )
+            )
+        )
+      )
+    )
+    .toSQL()
+);
+
 const getScriptsWithErroredParents = db
   .select()
-  .from(pipelineScriptRuns)
+  .from(runs)
   .where((run) =>
     and(
       eq(run.runStatus, "Queued"),
@@ -69,8 +105,8 @@ const getScriptsWithErroredParents = db
           )
           .where((data) =>
             and(
-              eq(data.pipelineScriptRuns.id, run.id),
-              ne(data.pipelineScriptRuns.runStatus, "Error")
+              eq(data.script_run_dependency.runId, run.id),
+              eq(data.pipeline_script_runs.runStatus, "Error")
             )
           )
       )
@@ -79,7 +115,7 @@ const getScriptsWithErroredParents = db
   .prepare("get_scripts_with_errored_parents");
 
 let spawned = false;
-class ExecutionLoop {
+export class ExecutionLoop {
   pistonPackagesPromise = pistonClient.getPackages();
   addedPackages: PistonPackageResult[] = [];
 
@@ -102,7 +138,15 @@ class ExecutionLoop {
     await this.convertAllExecutingIntoPending();
 
     while (true) {
+      await this.propagateErroredRuns();
+
       const pendingRuns = await fetchNextQueuedRuns.execute();
+
+      if (pendingRuns.length === 0) {
+        // Quick timeout to not spam the database
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        continue;
+      }
 
       await Promise.all(
         pendingRuns.map(async (run) => {
@@ -116,64 +160,141 @@ class ExecutionLoop {
     await this.markRunAsExecuting(run);
 
     const executable = await getExecutableById(run.executableId);
-    await this.ensurePackageInstalled(executable.runtime);
+    const installResult = await this.ensurePackageInstalled(executable.runtime);
+
+    if (installResult == "failed") {
+      await this.markRunAsErrored(
+        run,
+        "FailedToInstallLanguageError",
+        Buffer.from(
+          `Failed to locate/install install package ${executable.runtime}`
+        )
+      );
+      return;
+    }
+
+    const compositeId = compositeIdFromString(run.compositeId);
+    const inputs = compositeId.inputs;
+
+    let stdin: Buffer | undefined;
+    const otherFiles: Record<string, Buffer> = {};
+
+    await Promise.all(
+      Object.entries(inputs).map(async ([name, id]) => {
+        const buffer = await getInputFromId(id);
+
+        if (name === "-") {
+          stdin = buffer;
+        } else {
+          otherFiles[name] = buffer;
+        }
+      })
+    );
+
+    // TODO: Validate that stdin is valid utf-8
 
     const { lang, version } = getRuntimeParams(executable.runtime);
 
-    const result = await pistonClient.execute({
-      language: lang,
-      version: version,
-      files: [
-        {
-          content: executable.file.data.toString("base64"),
-          name: executable.file.filename,
-          encoding: "base64",
-        },
-      ],
+    const result = await this.scriptRunLock.acquire("lock", async () => {
+      return pistonClient.execute({
+        language: lang,
+        version: version,
+        files: [
+          {
+            content: executable.file.data.toString(),
+            name: executable.file.filename,
+            encoding: "utf8",
+          },
+          ...Object.entries(otherFiles).map(([name, buffer]) => ({
+            content: buffer.toString("base64"),
+            name,
+            encoding: "base64",
+          })),
+        ],
+        stdin: stdin?.toString(),
+      });
     });
 
-    console.log(result);
-    throw new Error("Not implemented");
-    // TODO: Process the result here
+    if (result.compile) {
+      if (result.compile.code !== 0) {
+        await this.markRunAsErrored(
+          run,
+          "CompileError",
+          Buffer.from(result.compile.output)
+        );
+        return;
+      }
+    }
+
+    if (result.run.code !== 0) {
+      await this.markRunAsErrored(
+        run,
+        "RuntimeError",
+        Buffer.from(result.run.output)
+      );
+      return;
+    }
+
+    let output: Buffer;
+    switch (compositeId.output) {
+      case "base64": {
+        output = Buffer.from(result.run.output, "base64");
+        break;
+      }
+      case "utf8": {
+        output = Buffer.from(result.run.output, "utf8");
+        break;
+      }
+      default: {
+        throw new UnreachableError(compositeId.output);
+      }
+    }
+
+    await this.markRunAsFinished(run, output);
   }
 
-  async ensurePackageInstalled(
-    runtime: string
-  ): Promise<"installed" | "failed"> {
-    const { lang, version } = getRuntimeParams(runtime);
+  async ensurePackageInstalled(pkg: string): Promise<"installed" | "failed"> {
+    const { lang, runtime, version } = getRuntimeParams(pkg);
 
-    const packages = await this.pistonPackagesPromise;
+    return this.packageInstallLock.acquire(pkg, async () => {
+      const packages = await this.pistonPackagesPromise;
 
-    const packageToInstall = packages.find(
-      (pkg) => pkg.language === lang && pkg.language_version === version
-    );
+      console.log(packages);
 
-    if (!packageToInstall) {
-      return "failed";
-    }
+      const packageToInstall = packages.find(
+        (pkg) => pkg.language === runtime && pkg.language_version === version
+      );
 
-    if (packageToInstall.installed) {
-      return "installed";
-    }
+      if (!packageToInstall) {
+        console.log("Package not found", pkg);
+        return "failed";
+      }
 
-    const alreadyInstalled = this.addedPackages.find(
-      (pkg) => pkg.language === lang && pkg.language_version === version
-    );
+      if (packageToInstall.installed) {
+        console.log("Package already installed", pkg);
+        return "installed";
+      }
 
-    if (alreadyInstalled) {
-      return "installed";
-    }
+      const alreadyInstalled = this.addedPackages.find(
+        (pkg) => pkg.language === lang && pkg.language_version === version
+      );
 
-    return this.packageInstallLock.acquire("install", async () => {
+      if (alreadyInstalled) {
+        console.log("Package already installed", pkg);
+        return "installed";
+      }
+
       try {
+        console.log("Installing package", pkg);
         await pistonClient.installPackage({
-          language: lang,
+          language: runtime,
           version: version,
         });
         packageToInstall.installed = true;
         this.addedPackages.push(packageToInstall);
         return "installed";
       } catch (e) {
+        console.log("Failed to install package", pkg, e);
         return "failed";
       }
     });
@@ -221,6 +342,8 @@ class ExecutionLoop {
         runStatus: "Executing",
       })
       .where(eq(pipelineScriptRuns.id, run.id));
+
+    console.log("Marked run as executing", run.compositeId);
     // TODO: Notification system
   }
 
@@ -252,11 +375,13 @@ class ExecutionLoop {
         .where(eq(pipelineScriptRuns.id, run.id));
     });
 
+    console.log("Marked run as errored", run.compositeId);
+    console.log("Error:\n", error.toString());
     // TODO: Notification system
   }
 
-  async markRunAsFinished(run: ScriptRun, output: string) {
-    const extAndMime = await getExtAndMimeFromBuffer(Buffer.from(output));
+  async markRunAsFinished(run: ScriptRun, output: Buffer) {
+    const extAndMime = await getExtAndMimeFromBuffer(output);
 
     db.transaction(async (tx) => {
       const file = await getOrCreateFile(
@@ -264,7 +389,7 @@ class ExecutionLoop {
         {
           filename: `output.${extAndMime.ext}`,
           mime: extAndMime.mime,
-          data: Buffer.from(output),
+          data: output,
         },
         run.questionId
       );
@@ -278,12 +403,47 @@ class ExecutionLoop {
         .where(eq(pipelineScriptRuns.id, run.id));
     });
 
+    console.log("Marked run as finished", run.compositeId);
+    console.log("Output:\n", output.toString());
     // TODO: Notification system
   }
 }
 
+async function getInputFromId(id: CompositeId): Promise<Buffer> {
+  switch (id.kind) {
+    case "file": {
+      const file = await getFileById(id.fileId);
+      return file.data;
+    }
+    case "script": {
+      const idStr = compositeIdAsString(id);
+      const script = await db.query.pipelineScriptRuns.findFirst({
+        where: (r, { eq }) => eq(r.compositeId, idStr),
+      });
+
+      if (!script) {
+        throw new Error(
+          `Script with composite id ${idStr} not found while requesting its output. This is an invalid state.`
+        );
+      }
+
+      if (!script.outputFileId) {
+        throw new Error(
+          `Script with composite id ${idStr} does not have an output file. This is an invalid state.`
+        );
+      }
+
+      const file = await getFileById(script.outputFileId);
+      return file.data;
+    }
+    default: {
+      throw new UnreachableError(id);
+    }
+  }
+}
+
 async function getExtAndMimeFromBuffer(buffer: Buffer) {
-  const type = await buffermime.fileTypeFromBuffer(buffer);
+  const type = await fileTypeFromBuffer(buffer);
   if (!type) {
     let isValidUtf8 = true;
     try {
@@ -310,10 +470,21 @@ async function getExtAndMimeFromBuffer(buffer: Buffer) {
   };
 }
 
-export function getRuntimeParams(runtime: string) {
-  const [lang, version] = runtime.split(":");
+export function getRuntimeParams(languageName: string) {
+  const [langpath, version] = languageName.split(":");
+
+  const langsplit = langpath.split("/");
+
+  let lang = langsplit[0];
+  let runtime = langsplit[0];
+  if (langsplit.length == 2) {
+    lang = langsplit[1];
+    runtime = langsplit[0];
+  }
+
   return {
     lang,
+    runtime,
     version,
   };
 }

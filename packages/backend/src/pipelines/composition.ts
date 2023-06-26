@@ -60,8 +60,12 @@ export function getCompositeIdScriptDependencies(
   );
 }
 
-export function compositeIdAsString(compositeId: CompositeId): string {
+export function compositeIdAsString(compositeId: ScriptCompositeId): string {
   return JSON.stringify(compositeId);
+}
+
+export function compositeIdFromString(compositeId: string): ScriptCompositeId {
+  return JSON.parse(compositeId);
 }
 
 export function getCompositeIdDepth(compositeId: CompositeId): number {
@@ -82,7 +86,7 @@ export function sortCompositeIdsByDepth<T extends CompositeId>(
   }));
 
   // Sort by depth
-  compositeIdsWithDepth.sort((a, b) => b.depth - a.depth);
+  compositeIdsWithDepth.sort((a, b) => a.depth - b.depth);
 
   // Map back to just ids
   return compositeIdsWithDepth.map((x) => x.id);

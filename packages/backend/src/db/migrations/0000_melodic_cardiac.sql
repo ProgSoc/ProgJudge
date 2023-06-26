@@ -86,15 +86,15 @@ CREATE TABLE IF NOT EXISTS "submissions" (
 	"question_id" uuid NOT NULL,
 	"team_id" uuid NOT NULL,
 	"status" submissions_result_status DEFAULT 'Pending',
-	"file" uuid NOT NULL
+	"file_id" uuid NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS "teamMembers" (
+CREATE TABLE IF NOT EXISTS "team_members" (
 	"team_id" uuid NOT NULL,
 	"user_id" uuid NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "teamMembers" ADD CONSTRAINT "teamMembers_team_id_user_id" PRIMARY KEY("team_id","user_id");
+ALTER TABLE "team_members" ADD CONSTRAINT "team_members_team_id_user_id" PRIMARY KEY("team_id","user_id");
 
 CREATE TABLE IF NOT EXISTS "teams" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -119,9 +119,9 @@ CREATE TABLE IF NOT EXISTS "files" (
 	"question_id" uuid NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS "pipelineScriptRuns" (
+CREATE TABLE IF NOT EXISTS "pipeline_script_runs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"composite_id" json PRIMARY KEY NOT NULL,
+	"composite_id" varchar NOT NULL,
 	"run_status" script_run_status DEFAULT 'Queued' NOT NULL,
 	"error_kind" script_run_error_kind,
 	"output_file" uuid,
@@ -137,16 +137,16 @@ CREATE TABLE IF NOT EXISTS "pipeline_scripts" (
 	"question_version_id" uuid NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS "scriptRunDependency" (
+CREATE TABLE IF NOT EXISTS "script_run_dependency" (
 	"run_id" uuid NOT NULL,
 	"previous_run_id" uuid NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "scriptRunDependency" ADD CONSTRAINT "scriptRunDependency_run_id_previous_run_id" PRIMARY KEY("run_id","previous_run_id");
+ALTER TABLE "script_run_dependency" ADD CONSTRAINT "script_run_dependency_run_id_previous_run_id" PRIMARY KEY("run_id","previous_run_id");
 
 CREATE UNIQUE INDEX IF NOT EXISTS "username_index" ON "users" ("username");
 CREATE UNIQUE INDEX IF NOT EXISTS "competition_team" ON "teams" ("competition_id","name");
-CREATE UNIQUE INDEX IF NOT EXISTS "composite_id_index" ON "pipelineScriptRuns" ("composite_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "composite_id_index" ON "pipeline_script_runs" ("composite_id");
 DO $$ BEGIN
  ALTER TABLE "providers" ADD CONSTRAINT "providers_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
@@ -202,19 +202,19 @@ EXCEPTION
 END $$;
 
 DO $$ BEGIN
- ALTER TABLE "submissions" ADD CONSTRAINT "submissions_file_executable_files_file_id_fk" FOREIGN KEY ("file") REFERENCES "executable_files"("file_id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "submissions" ADD CONSTRAINT "submissions_file_id_executable_files_id_fk" FOREIGN KEY ("file_id") REFERENCES "executable_files"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 
 DO $$ BEGIN
- ALTER TABLE "teamMembers" ADD CONSTRAINT "teamMembers_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "team_members" ADD CONSTRAINT "team_members_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 
 DO $$ BEGIN
- ALTER TABLE "teamMembers" ADD CONSTRAINT "teamMembers_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "team_members" ADD CONSTRAINT "team_members_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -238,25 +238,25 @@ EXCEPTION
 END $$;
 
 DO $$ BEGIN
- ALTER TABLE "pipelineScriptRuns" ADD CONSTRAINT "pipelineScriptRuns_output_file_files_id_fk" FOREIGN KEY ("output_file") REFERENCES "files"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "pipeline_script_runs" ADD CONSTRAINT "pipeline_script_runs_output_file_files_id_fk" FOREIGN KEY ("output_file") REFERENCES "files"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 
 DO $$ BEGIN
- ALTER TABLE "pipelineScriptRuns" ADD CONSTRAINT "pipelineScriptRuns_question_id_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "questions"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "pipeline_script_runs" ADD CONSTRAINT "pipeline_script_runs_question_id_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "questions"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 
 DO $$ BEGIN
- ALTER TABLE "pipelineScriptRuns" ADD CONSTRAINT "pipelineScriptRuns_submission_result_id_submission_results_id_fk" FOREIGN KEY ("submission_result_id") REFERENCES "submission_results"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "pipeline_script_runs" ADD CONSTRAINT "pipeline_script_runs_submission_result_id_submission_results_id_fk" FOREIGN KEY ("submission_result_id") REFERENCES "submission_results"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 
 DO $$ BEGIN
- ALTER TABLE "pipelineScriptRuns" ADD CONSTRAINT "pipelineScriptRuns_executable_id_executable_files_id_fk" FOREIGN KEY ("executable_id") REFERENCES "executable_files"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "pipeline_script_runs" ADD CONSTRAINT "pipeline_script_runs_executable_id_executable_files_id_fk" FOREIGN KEY ("executable_id") REFERENCES "executable_files"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -274,13 +274,13 @@ EXCEPTION
 END $$;
 
 DO $$ BEGIN
- ALTER TABLE "scriptRunDependency" ADD CONSTRAINT "scriptRunDependency_run_id_pipelineScriptRuns_id_fk" FOREIGN KEY ("run_id") REFERENCES "pipelineScriptRuns"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "script_run_dependency" ADD CONSTRAINT "script_run_dependency_run_id_pipeline_script_runs_id_fk" FOREIGN KEY ("run_id") REFERENCES "pipeline_script_runs"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 
 DO $$ BEGIN
- ALTER TABLE "scriptRunDependency" ADD CONSTRAINT "scriptRunDependency_previous_run_id_pipelineScriptRuns_id_fk" FOREIGN KEY ("previous_run_id") REFERENCES "pipelineScriptRuns"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "script_run_dependency" ADD CONSTRAINT "script_run_dependency_previous_run_id_pipeline_script_runs_id_fk" FOREIGN KEY ("previous_run_id") REFERENCES "pipeline_script_runs"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

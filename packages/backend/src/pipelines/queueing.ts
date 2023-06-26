@@ -4,6 +4,7 @@ import {
   CompositeId,
   ScriptCompositeId,
   buildAllIdsForPipeline,
+  compositeIdAsString,
   getCompositeIdScriptDependencies,
   sortCompositeIdsByDepth,
 } from "./composition";
@@ -79,9 +80,10 @@ export async function queueExecutionsIntoDb(
     // Grab all the dependencies for this run
     const dependentRuns = await Promise.all(
       dependentIds.map(async (id) => {
+        const idStr = compositeIdAsString(id);
         return tx.query.pipelineScriptRuns.findFirst({
           where: (run, { and, eq }) =>
-            and(eq(run.compositeId, id), eq(run.questionId, questionId)),
+            and(eq(run.compositeId, idStr), eq(run.questionId, questionId)),
         });
       })
     );
@@ -101,7 +103,7 @@ export async function queueExecutionsIntoDb(
     const insertedRuns = await tx
       .insert(pipelineScriptRuns)
       .values({
-        compositeId: run,
+        compositeId: compositeIdAsString(run),
         questionId,
         submissionResultId: outputRun === run ? submissionResultId : undefined,
         executableId: run.scriptFileId,

@@ -106,7 +106,7 @@ async function createPipelineScriptsForQuestionVersion(
   return scripts;
 }
 
-export async function createQuestion(
+export async function createQuestionVersion(
   question: CreateQuestionVersion,
   questionId: string
 ) {
@@ -140,6 +140,6 @@ export async function createQuestion(
       createdVersion.id
     );
 
-    queueExecutions(tx, createdVersion.id);
+    await queueExecutions(tx, createdVersion.id);
   });
 }

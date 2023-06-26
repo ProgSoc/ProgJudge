@@ -41,14 +41,14 @@ const envVariables = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_CALLBACK_URL: z.string().url().optional(),
-  
+
   /**
    * Piston API
    */
   PISTON_API_URL: z
     .string()
     .url("Needs to be a valid url")
-    .default("https://emkc.org/api/v2/piston"),
+    .default("http://localhost:2000"),
 
   /**
    * Frontend base url

@@ -65,7 +65,7 @@ export const executableFilesRelations = relations(
   executableFiles,
   ({ one, many }) => ({
     file: one(files, {
-      fields: [executableFiles.id],
+      fields: [executableFiles.fileId],
       references: [files.id],
       relationName: "file_on_executable_file",
     }),
@@ -123,13 +123,13 @@ export const pipelineScriptErrorKindEnum = pgEnum("script_run_error_kind", [
 ]);
 
 export const pipelineScriptRuns = pgTable(
-  "pipelineScriptRuns",
+  "pipeline_script_runs",
   {
     /** The id of the run */
     id: uuid("id").primaryKey().defaultRandom(),
 
     /** The composite id of the run (basically a complex cache key), also contains all the run metadata */
-    compositeId: json("composite_id").$type<ScriptCompositeId>().primaryKey(),
+    compositeId: varchar("composite_id").notNull(),
 
     /** The status of the run */
     runStatus: pipelineScriptRunStatusEnum("run_status")
@@ -195,7 +195,7 @@ export const pipelineScriptRunRelations = relations(
 );
 
 export const scriptRunDependencies = pgTable(
-  "scriptRunDependency",
+  "script_run_dependency",
   {
     /** The id of the run */
     runId: uuid("run_id")
