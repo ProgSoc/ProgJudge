@@ -36,6 +36,44 @@ const createQuestionVersionSchema = z.object({
 
 type CreateQuestionVersion = z.infer<typeof createQuestionVersionSchema>;
 
+export async function createQuestionVersion(
+  question: CreateQuestionVersion,
+  questionId: string
+) {
+  db.transaction(async (tx) => {
+    const pipelineSchema = {
+      nodes: question.pipeline.nodes,
+      outputNode: question.pipeline.outputNode,
+    } satisfies PipelineSchema;
+
+    const createdVersions = await tx
+      .insert(questionVersions)
+      .values({
+        questionId,
+        pipelineConfig: pipelineSchema,
+      })
+      .returning();
+    const createdVersion = createdVersions[0];
+
+    // TODO: Do this more parallel? Currently this does everything sequentially
+    await createTestCasesForQuestionVersion(
+      tx,
+      question.testCases,
+      questionId,
+      createdVersion.id
+    );
+
+    await createPipelineScriptsForQuestionVersion(
+      tx,
+      question,
+      questionId,
+      createdVersion.id
+    );
+
+    await queueExecutions(tx, createdVersion.id);
+  });
+}
+
 async function createTestCasesForQuestionVersion(
   tx: typeof db,
   testCases: CreateTestCase[],
@@ -104,42 +142,4 @@ async function createPipelineScriptsForQuestionVersion(
   }
 
   return scripts;
-}
-
-export async function createQuestionVersion(
-  question: CreateQuestionVersion,
-  questionId: string
-) {
-  db.transaction(async (tx) => {
-    const pipelineSchema = {
-      nodes: question.pipeline.nodes,
-      outputNode: question.pipeline.outputNode,
-    } satisfies PipelineSchema;
-
-    const createdVersions = await tx
-      .insert(questionVersions)
-      .values({
-        questionId,
-        pipelineConfig: pipelineSchema,
-      })
-      .returning();
-    const createdVersion = createdVersions[0];
-
-    // TODO: Do this more parallel? Currently this does everything sequentially
-    await createTestCasesForQuestionVersion(
-      tx,
-      question.testCases,
-      questionId,
-      createdVersion.id
-    );
-
-    await createPipelineScriptsForQuestionVersion(
-      tx,
-      question,
-      questionId,
-      createdVersion.id
-    );
-
-    await queueExecutions(tx, createdVersion.id);
-  });
 }

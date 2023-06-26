@@ -4,6 +4,7 @@ import { pipelineSchema } from "./pipelineConfig";
 import db from "../db/db";
 import { executableFiles, files } from "../db/schema";
 import mime from "mime-types";
+import { minioDownloadFile, minioUploadFile } from "../libs/minio";
 
 export const createFileSchema = z.object({
   filename: z.string(),
@@ -28,13 +29,11 @@ function sha256(content: Buffer) {
 const testS3FilesDict: Record<string, Buffer> = {};
 
 async function saveFileToS3(ref: string, data: Buffer) {
-  // throw new Error("Not implemented");
-  testS3FilesDict[ref] = data;
+  return minioUploadFile(ref, data);
 }
 
 async function getFileFromS3(ref: string): Promise<Buffer> {
-  // throw new Error("Not implemented");
-  return testS3FilesDict[ref];
+  return minioDownloadFile(ref);
 }
 
 export async function getOrCreateFile(

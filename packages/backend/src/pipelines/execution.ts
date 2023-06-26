@@ -37,6 +37,7 @@ type ScriptErrorKind = NonNullable<
 
 const runs = db.select().from(pipelineScriptRuns).as("run");
 
+// Feteches any queued run where all of its parents have succeeded
 const fetchNextQueuedRuns = db
   .select()
   .from(runs)
@@ -62,33 +63,7 @@ const fetchNextQueuedRuns = db
   )
   .prepare("fetch_next_queued_runs");
 
-console.log(
-  db
-    .select()
-    .from(runs)
-    .where((run) =>
-      and(
-        eq(run.runStatus, "Queued"),
-        notExists(
-          db
-            .select()
-            .from(scriptRunDependencies)
-            .leftJoin(
-              pipelineScriptRuns,
-              eq(pipelineScriptRuns.id, scriptRunDependencies.previousRunId)
-            )
-            .where((data) =>
-              and(
-                eq(data.script_run_dependency.runId, run.id),
-                ne(data.pipeline_script_runs.runStatus, "Success")
-              )
-            )
-        )
-      )
-    )
-    .toSQL()
-);
-
+// Fetches any queued run where any of its parents have errored
 const getScriptsWithErroredParents = db
   .select()
   .from(runs)

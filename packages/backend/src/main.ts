@@ -116,6 +116,7 @@ async function run() {
             runtime: "dotnet/csharp:5.0.201",
             data: Buffer.from(`
 using System;
+using System.Drawing;
 
 public class Program
 {
@@ -143,15 +144,15 @@ print('foo')
           echo3: {
             runtime: "rust:1.68.2",
             data: Buffer.from(`
-use std::io::{self, Read};
+          use std::io::{self, Read};
 
-#[path="file1.rs"]
-mod file1;
+          #[path="file1.rs"]
+          mod file1;
 
-fn main() {
-  file1::print_test();
-}
-            `),
+          fn main() {
+            file1::print_test();
+          }
+                      `),
             filename: "echo.rs",
           },
         },
@@ -161,94 +162,6 @@ fn main() {
   );
 
   console.log("done");
-
-  // const ts = await db
-  //   .insert(teams)
-  //   .values({
-  //     name: "Test Team",
-  //     displayName: "Test Team",
-  //     competitionId: comp.id,
-  //   })
-  //   .returning();
-  // const team = ts[0];
 }
 
 run();
-
-// {
-//   language: 'python',
-//   version: '3.10.0',
-//   run: {
-//     stdout: '',
-//     stderr: 'Traceback (most recent call last):\n' +
-//       '  File "/piston/jobs/4b08d3d5-17cc-41a5-bf09-62d0e1e051ab/echo.py", line 1, in <module>\n' +
-//       '    data = input()\n' +
-//       'EOFError: EOF when reading a line\n',
-//     code: 1,
-//     signal: null,
-//     output: 'Traceback (most recent call last):\n' +
-//       '  File "/piston/jobs/4b08d3d5-17cc-41a5-bf09-62d0e1e051ab/echo.py", line 1, in <module>\n' +
-//       '    data = input()\n' +
-//       'EOFError: EOF when reading a line\n'
-//   }
-// }
-
-// {
-//   language: 'python',
-//   version: '3.10.0',
-//   run: {
-//     stdout: 'foo bar\n',
-//     stderr: '',
-//     code: 0,
-//     signal: null,
-//     output: 'foo bar\n'
-//   }
-// }
-
-// {
-//   language: 'rust',
-//   version: '1.68.2',
-//   run: {
-//     stdout: 'foo bar\n',
-//     stderr: '',
-//     code: 0,
-//     signal: null,
-//     output: 'foo bar\n'
-//   },
-//   compile: { stdout: '', stderr: '', code: 0, signal: null, output: '' }
-// }
-
-// {
-//   language: 'rust',
-//   version: '1.68.2',
-//   run: {
-//     stdout: '',
-//     stderr: '/piston/packages/rust/1.68.2/run: line 4: ./binary: No such file or directory\n',
-//     code: 127,
-//     signal: null,
-//     output: '/piston/packages/rust/1.68.2/run: line 4: ./binary: No such file or directory\n'
-//   },
-//   compile: {
-//     stdout: '',
-//     stderr: 'error: expected one of `->`, `where`, or `{`, found `b`\n' +
-//       ' --> echo.rs:4:10\n' +
-//       '  |\n' +
-//       '4 | fn main()b {\n' +
-//       '  |          ^ expected one of `->`, `where`, or `{`\n' +
-//       '\n' +
-//       'error: aborting due to previous error\n' +
-//       '\n' +
-//       "chmod: cannot access 'binary': No such file or directory\n",
-//     code: 1,
-//     signal: null,
-//     output: 'error: expected one of `->`, `where`, or `{`, found `b`\n' +
-//       ' --> echo.rs:4:10\n' +
-//       '  |\n' +
-//       '4 | fn main()b {\n' +
-//       '  |          ^ expected one of `->`, `where`, or `{`\n' +
-//       '\n' +
-//       'error: aborting due to previous error\n' +
-//       '\n' +
-//       "chmod: cannot access 'binary': No such file or directory\n"
-//   }
-// }

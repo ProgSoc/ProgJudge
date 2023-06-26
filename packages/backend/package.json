@@ -27,6 +27,7 @@
         "file-type": "^18.5.0",
         "helmet": "^7.0.0",
         "mime-types": "^2.1.35",
+        "minio": "^7.1.1",
         "passport": "^0.6.0",
         "passport-discord": "^0.1.4",
         "passport-github2": "^0.1.12",
