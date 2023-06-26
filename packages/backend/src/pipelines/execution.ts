@@ -259,8 +259,6 @@ export class ExecutionLoop {
     return this.packageInstallLock.acquire(pkg, async () => {
       const packages = await this.pistonPackagesPromise;
 
-      console.log(packages);
-
       const packageToInstall = packages.find(
         (pkg) => pkg.language === runtime && pkg.language_version === version
       );
@@ -271,7 +269,6 @@ export class ExecutionLoop {
       }
 
       if (packageToInstall.installed) {
-        console.log("Package already installed", pkg);
         return "installed";
       }
 
@@ -280,7 +277,6 @@ export class ExecutionLoop {
       );
 
       if (alreadyInstalled) {
-        console.log("Package already installed", pkg);
         return "installed";
       }
 
@@ -343,7 +339,6 @@ export class ExecutionLoop {
       })
       .where(eq(pipelineScriptRuns.id, run.id));
 
-    console.log("Marked run as executing", run.compositeId);
     // TODO: Notification system
   }
 
@@ -354,7 +349,7 @@ export class ExecutionLoop {
   ) {
     const extAndMime = await getExtAndMimeFromBuffer(error);
 
-    db.transaction(async (tx) => {
+    await db.transaction(async (tx) => {
       const file = await getOrCreateFile(
         tx,
         {
@@ -376,14 +371,14 @@ export class ExecutionLoop {
     });
 
     console.log("Marked run as errored", run.compositeId);
-    console.log("Error:\n", error.toString());
+    console.log("Error:\n" + error.toString());
     // TODO: Notification system
   }
 
   async markRunAsFinished(run: ScriptRun, output: Buffer) {
     const extAndMime = await getExtAndMimeFromBuffer(output);
 
-    db.transaction(async (tx) => {
+    await db.transaction(async (tx) => {
       const file = await getOrCreateFile(
         tx,
         {
@@ -404,7 +399,7 @@ export class ExecutionLoop {
     });
 
     console.log("Marked run as finished", run.compositeId);
-    console.log("Output:\n", output.toString());
+    console.log("Output:\n" + output.toString());
     // TODO: Notification system
   }
 }

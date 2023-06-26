@@ -35,7 +35,7 @@ export function makeScriptCompositeId(
       sortedInputs[key] = inputs[key];
     });
 
-  return { kind: "script", scriptFileId, inputs: sortedInputs, output };
+  return { kind: "script", scriptFileId, output, inputs: sortedInputs };
 }
 
 export function getCompositeIdDependencies(id: CompositeId): CompositeId[] {

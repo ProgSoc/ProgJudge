@@ -86,18 +86,21 @@ async function run() {
               {
                 source: {
                   kind: PipelineScriptInputSourceKind.Stdout,
-                  sourceScriptName: "echo",
-                },
-                destination: { kind: PipelineScriptInputDestKind.Stdin },
-              },
-              {
-                source: {
-                  kind: PipelineScriptInputSourceKind.Stdout,
                   sourceScriptName: "echo2",
                 },
                 destination: {
                   kind: PipelineScriptInputDestKind.File,
-                  path: "test.txt",
+                  path: "file2.rs",
+                },
+              },
+              {
+                source: {
+                  kind: PipelineScriptInputSourceKind.Stdout,
+                  sourceScriptName: "echo",
+                },
+                destination: {
+                  kind: PipelineScriptInputDestKind.File,
+                  path: "file1.rs",
                 },
               },
             ],
@@ -109,19 +112,6 @@ async function run() {
           },
         },
         scripts: {
-          echo2: {
-            runtime: "rust:1.68.2",
-            data: Buffer.from(`
-use std::io::{self, Read};
-
-fn main() {
-    let mut buffer = String::new();
-    io::stdin().read_to_string(&mut buffer).unwrap();
-    print!("{} from rust", buffer.trim());
-}
-            `),
-            filename: "echo.rs",
-          },
           echo: {
             runtime: "dotnet/csharp:5.0.201",
             data: Buffer.from(`
@@ -131,22 +121,38 @@ public class Program
 {
     public static void Main()
     {
-        string line = Console.ReadLine();
-        Console.WriteLine(line + " from csharp");
+        Console.WriteLine(@"
+
+pub fn print_test() {
+    println!(""Hello from imported rust file"");
+}
+
+        ");
     }
 }
             `),
             filename: "echo.cs",
           },
-          echo3: {
+          echo2: {
             runtime: "python:3.10.0",
             data: Buffer.from(`
-data1 = input()
-data2 = open("test.txt").read()
-print("data from stdin: " + data1)
-print("data from test.txt: " + data2)
+print('foo')
             `),
             filename: "echo.py",
+          },
+          echo3: {
+            runtime: "rust:1.68.2",
+            data: Buffer.from(`
+use std::io::{self, Read};
+
+#[path="file1.rs"]
+mod file1;
+
+fn main() {
+  file1::print_test();
+}
+            `),
+            filename: "echo.rs",
           },
         },
       },
