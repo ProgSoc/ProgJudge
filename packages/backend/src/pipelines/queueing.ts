@@ -108,7 +108,16 @@ export async function queueExecutionsIntoDb(
         submissionResultId: outputRun === run ? submissionResultId : undefined,
         executableId: run.scriptFileId,
       })
+      .onConflictDoNothing({
+        target: pipelineScriptRuns.compositeId,
+      })
       .returning();
+
+    if (insertedRuns.length === 0) {
+      // If the run already exists, we don't need to insert the dependencies
+      continue;
+    }
+
     const insertedRun = insertedRuns[0];
 
     // Insert the dependency relationships

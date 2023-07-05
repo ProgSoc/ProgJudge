@@ -1,12 +1,12 @@
 import { run } from "node:test";
-import db from "../db/db";
+import db from "../../db/db";
 import {
   pipelineScriptErrorKindEnum,
   pipelineScriptRunRelations,
   pipelineScriptRunStatusEnum,
   pipelineScriptRuns,
   scriptRunDependencies,
-} from "../db/schema";
+} from "../../db/schema";
 import {
   InferModel,
   eq,
@@ -16,78 +16,24 @@ import {
   exists,
   WithEnum,
 } from "drizzle-orm";
-import { getExecutableById, getFileById, getOrCreateFile } from "./files";
-import { fileTypeFromBuffer } from "file-type";
-import pistonClient from "../libs/piston/client";
-import { PistonPackageResult } from "../libs/piston/piston";
+import { getExecutableById, getFileById, getOrCreateFile } from "../files";
+import pistonClient from "../../libs/piston/client";
+import { PistonPackageResult } from "../../libs/piston/piston";
 import AsyncLock from "async-lock";
 import {
   CompositeId,
   compositeIdFromString,
   compositeIdAsString,
   getCompositeIdDependencies,
-} from "./composition";
-import { UnreachableError } from "../unreachableError";
+} from "../composition";
+import { UnreachableError } from "../../unreachableError";
+import {
+  fetchNextQueuedRuns,
+  getScriptsWithErroredParents,
+} from "./preparedQueries";
+import { RunStateManager } from "./states";
 
 type ScriptRun = InferModel<typeof pipelineScriptRuns>;
-
-type ScriptErrorKind = NonNullable<
-  InferModel<typeof pipelineScriptRuns>["errorKind"]
->;
-
-const runs = db.select().from(pipelineScriptRuns).as("run");
-
-// Feteches any queued run where all of its parents have succeeded
-const fetchNextQueuedRuns = db
-  .select()
-  .from(runs)
-  .where((run) =>
-    and(
-      eq(run.runStatus, "Queued"),
-      notExists(
-        db
-          .select()
-          .from(scriptRunDependencies)
-          .leftJoin(
-            pipelineScriptRuns,
-            eq(pipelineScriptRuns.id, scriptRunDependencies.previousRunId)
-          )
-          .where((data) =>
-            and(
-              eq(data.script_run_dependency.runId, run.id),
-              ne(data.pipeline_script_runs.runStatus, "Success")
-            )
-          )
-      )
-    )
-  )
-  .prepare("fetch_next_queued_runs");
-
-// Fetches any queued run where any of its parents have errored
-const getScriptsWithErroredParents = db
-  .select()
-  .from(runs)
-  .where((run) =>
-    and(
-      eq(run.runStatus, "Queued"),
-      exists(
-        db
-          .select()
-          .from(scriptRunDependencies)
-          .leftJoin(
-            pipelineScriptRuns,
-            eq(pipelineScriptRuns.id, scriptRunDependencies.previousRunId)
-          )
-          .where((data) =>
-            and(
-              eq(data.script_run_dependency.runId, run.id),
-              eq(data.pipeline_script_runs.runStatus, "Error")
-            )
-          )
-      )
-    )
-  )
-  .prepare("get_scripts_with_errored_parents");
 
 let spawned = false;
 export class ExecutionLoop {
@@ -97,14 +43,17 @@ export class ExecutionLoop {
   packageInstallLock = new AsyncLock();
   scriptRunLock = new AsyncLock();
 
-  static spawn() {
-    return new ExecutionLoop();
+  stateManager: RunStateManager;
+
+  static spawn(stateManager: RunStateManager) {
+    return new ExecutionLoop(stateManager);
   }
 
-  private constructor() {
+  private constructor(stateManager: RunStateManager) {
     if (spawned) {
       throw new Error("ExecutionLoop already spawned");
     }
+    this.stateManager = stateManager;
     spawned = true;
     void this.spawnExecutionLoop();
   }
@@ -132,13 +81,13 @@ export class ExecutionLoop {
   }
 
   async executeRun(run: ScriptRun) {
-    await this.markRunAsExecuting(run);
+    await this.stateManager.markRunAsExecuting(run);
 
     const executable = await getExecutableById(run.executableId);
     const installResult = await this.ensurePackageInstalled(executable.runtime);
 
     if (installResult == "failed") {
-      await this.markRunAsErrored(
+      await this.stateManager.markRunAsErrored(
         run,
         "FailedToInstallLanguageError",
         Buffer.from(
@@ -192,7 +141,7 @@ export class ExecutionLoop {
 
     if (result.compile) {
       if (result.compile.code !== 0) {
-        await this.markRunAsErrored(
+        await this.stateManager.markRunAsErrored(
           run,
           "CompileError",
           Buffer.from(result.compile.output)
@@ -202,7 +151,7 @@ export class ExecutionLoop {
     }
 
     if (result.run.code !== 0) {
-      await this.markRunAsErrored(
+      await this.stateManager.markRunAsErrored(
         run,
         "RuntimeError",
         Buffer.from(result.run.output)
@@ -225,7 +174,7 @@ export class ExecutionLoop {
       }
     }
 
-    await this.markRunAsFinished(run, output);
+    await this.stateManager.markRunAsFinished(run, output);
   }
 
   async ensurePackageInstalled(pkg: string): Promise<"installed" | "failed"> {
@@ -296,7 +245,7 @@ export class ExecutionLoop {
       // For each errored run, we need to mark it as errored and propagate the error to all the runs that depend on it
       await Promise.all(
         erroredRuns.map(async (run) => {
-          await this.markRunAsErrored(
+          await this.stateManager.markRunAsErrored(
             run,
             "DependentScriptError",
             Buffer.from("A dependent run failed")
@@ -304,78 +253,6 @@ export class ExecutionLoop {
         })
       );
     }
-  }
-
-  async markRunAsExecuting(run: ScriptRun) {
-    await db
-      .update(pipelineScriptRuns)
-      .set({
-        runStatus: "Executing",
-      })
-      .where(eq(pipelineScriptRuns.id, run.id));
-
-    // TODO: Notification system
-  }
-
-  async markRunAsErrored(
-    run: ScriptRun,
-    errorKind: ScriptErrorKind,
-    error: Buffer
-  ) {
-    const extAndMime = await getExtAndMimeFromBuffer(error);
-
-    await db.transaction(async (tx) => {
-      const file = await getOrCreateFile(
-        tx,
-        {
-          filename: `error.${extAndMime.ext}`,
-          mime: extAndMime.mime,
-          data: Buffer.from(error),
-        },
-        run.questionId
-      );
-
-      await tx
-        .update(pipelineScriptRuns)
-        .set({
-          runStatus: "Error",
-          errorKind,
-          outputFileId: file.id,
-        })
-        .where(eq(pipelineScriptRuns.id, run.id));
-    });
-
-    console.log("Marked run as errored", run.compositeId);
-    console.log("Error:\n" + error.toString());
-    // TODO: Notification system
-  }
-
-  async markRunAsFinished(run: ScriptRun, output: Buffer) {
-    const extAndMime = await getExtAndMimeFromBuffer(output);
-
-    await db.transaction(async (tx) => {
-      const file = await getOrCreateFile(
-        tx,
-        {
-          filename: `output.${extAndMime.ext}`,
-          mime: extAndMime.mime,
-          data: output,
-        },
-        run.questionId
-      );
-
-      await tx
-        .update(pipelineScriptRuns)
-        .set({
-          runStatus: "Success",
-          outputFileId: file.id,
-        })
-        .where(eq(pipelineScriptRuns.id, run.id));
-    });
-
-    console.log("Marked run as finished", run.compositeId);
-    console.log("Output:\n" + output.toString());
-    // TODO: Notification system
   }
 }
 
@@ -410,34 +287,6 @@ async function getInputFromId(id: CompositeId): Promise<Buffer> {
       throw new UnreachableError(id);
     }
   }
-}
-
-async function getExtAndMimeFromBuffer(buffer: Buffer) {
-  const type = await fileTypeFromBuffer(buffer);
-  if (!type) {
-    let isValidUtf8 = true;
-    try {
-      new TextDecoder("utf8", { fatal: true }).decode(buffer);
-    } catch (e) {
-      isValidUtf8 = false;
-    }
-
-    if (isValidUtf8) {
-      return {
-        ext: "txt",
-        mime: "text/plain",
-      };
-    } else {
-      return {
-        ext: "bin",
-        mime: "application/octet-stream",
-      };
-    }
-  }
-  return {
-    ext: type.ext,
-    mime: type.mime,
-  };
 }
 
 export function getRuntimeParams(languageName: string) {

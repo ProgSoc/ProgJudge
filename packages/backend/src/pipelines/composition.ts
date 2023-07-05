@@ -8,34 +8,47 @@ import {
 } from "./pipelineConfig";
 import { UnreachableError } from "../unreachableError";
 
-export type CaseCompositeId = { kind: "file"; fileId: string };
-export type ScriptCompositeId = {
-  kind: "script";
+export type ScriptRunParams = {
   scriptFileId: string;
   inputs: Record<string, CompositeId>;
   output: NodeOutputFormat;
+  args?: string;
+  runTimeoutMs: number;
+  compileTimeoutMs: number;
+  runMemoryLimitBytes: number;
+  compileMemoryLimitBytes: number;
+};
+
+export type CaseCompositeId = { kind: "file"; fileId: string };
+export type ScriptCompositeId = ScriptRunParams & {
+  kind: "script";
 };
 
 export type CompositeId = CaseCompositeId | ScriptCompositeId;
 
+function sortObjectKeys<T extends Record<string, unknown>>(obj: T): T {
+  const result: Record<string, unknown> = {};
+  Object.keys(obj)
+    .sort()
+    .forEach((key) => {
+      result[key] = obj[key];
+    });
+  return result as T;
+}
+
 export function makeInputCompositeId(inputId: string): CaseCompositeId {
-  return { kind: "file", fileId: inputId };
+  return sortObjectKeys({ kind: "file", fileId: inputId });
 }
 
 export function makeScriptCompositeId(
-  scriptFileId: string,
-  inputs: Record<string, CompositeId>,
-  output: NodeOutputFormat
+  scriptParams: ScriptRunParams
 ): ScriptCompositeId {
   // Sort the file inputs map by key. This is important for normalization.
-  const sortedInputs: Record<string, CompositeId> = {};
-  Object.keys(inputs)
-    .sort()
-    .forEach((key) => {
-      sortedInputs[key] = inputs[key];
-    });
 
-  return { kind: "script", scriptFileId, output, inputs: sortedInputs };
+  scriptParams.inputs = sortObjectKeys(scriptParams.inputs);
+  scriptParams = sortObjectKeys(scriptParams);
+
+  return sortObjectKeys({ kind: "script", ...scriptParams });
 }
 
 export function getCompositeIdDependencies(id: CompositeId): CompositeId[] {
@@ -224,11 +237,15 @@ export function recursiveBuildAllIdsForPipeline(
     }
   }
 
-  const compositeId = makeScriptCompositeId(
-    currentScriptId,
-    fileInputsMap,
-    nodeData.output
-  );
+  const compositeId = makeScriptCompositeId({
+    scriptFileId: currentScriptId,
+    inputs: fileInputsMap,
+    output: nodeData.output,
+    compileMemoryLimitBytes: nodeData.compileMemoryLimitBytes,
+    compileTimeoutMs: nodeData.compileTimeoutMs,
+    runMemoryLimitBytes: nodeData.runMemoryLimitBytes,
+    runTimeoutMs: nodeData.runTimeoutMs,
+  });
 
   // Save it to the map
   nodeIds[forNode] = compositeId;

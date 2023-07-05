@@ -63,6 +63,10 @@ async function run() {
               kind: PipelineScriptKind.Script,
               scriptName: "echo",
             },
+            compileMemoryLimitBytes: 1024 * 1024 * 1024,
+            runMemoryLimitBytes: 1024 * 1024 * 1024,
+            compileTimeoutMs: 1000,
+            runTimeoutMs: 1000,
           },
           echo2: {
             inputs: [
@@ -80,6 +84,10 @@ async function run() {
               kind: PipelineScriptKind.Script,
               scriptName: "echo2",
             },
+            compileMemoryLimitBytes: 1024 * 1024 * 1024,
+            runMemoryLimitBytes: 1024 * 1024 * 1024,
+            compileTimeoutMs: 1000,
+            runTimeoutMs: 1000,
           },
           echo3: {
             inputs: [
@@ -109,6 +117,10 @@ async function run() {
               kind: PipelineScriptKind.Script,
               scriptName: "echo3",
             },
+            compileMemoryLimitBytes: 1024 * 1024 * 1024,
+            runMemoryLimitBytes: 1024 * 1024 * 1024,
+            compileTimeoutMs: 1000,
+            runTimeoutMs: 1000,
           },
         },
         scripts: {

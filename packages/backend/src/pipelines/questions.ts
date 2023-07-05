@@ -55,7 +55,6 @@ export async function createQuestionVersion(
       .returning();
     const createdVersion = createdVersions[0];
 
-    // TODO: Do this more parallel? Currently this does everything sequentially
     await createTestCasesForQuestionVersion(
       tx,
       question.testCases,

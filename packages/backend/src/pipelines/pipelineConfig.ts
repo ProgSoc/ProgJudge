@@ -67,6 +67,10 @@ const pipelineNodeSchema = z.object({
   script: pipelineScriptKindSchema,
   output: nodeOutputFormatSchema,
   inputs: z.array(pipelineInputSchema),
+  runTimeoutMs: z.number().positive(),
+  compileTimeoutMs: z.number().positive(),
+  runMemoryLimitBytes: z.number().positive(),
+  compileMemoryLimitBytes: z.number().positive(),
 });
 
 export const pipelineSchema = z.object({
